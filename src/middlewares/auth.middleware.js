@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { AppError } from "../utils/error.js";
 
-export const auth = (role) => {
+export const auth = (roles = []) => {
   return (req, res, next) => {
     const { token } = req.headers;
     if (!token) next(new AppError("Token is missed", 401));
@@ -9,7 +9,7 @@ export const auth = (role) => {
     jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
       if (err) next(new AppError("Expired or invalid token", 498));
 
-      if (decoded.role !== role)
+      if (!roles.includes(decoded.role))
         next(new AppError("Don't have enough privileges", 403));
       
       req.user = decoded;
