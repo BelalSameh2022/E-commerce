@@ -1,10 +1,7 @@
 import dotenv from "dotenv";
-import express from "express";
-import { dbConnection } from "./database/connection.js";
-
 dotenv.config();
-dbConnection();
-const app = express();
+import express from "express";
+import bootstrap from "./src/bootstrap.js";
 
-const port = process.env.PORT || 3001;
-app.listen(port, () => console.log(`Server is running on port ${port}...`));
+const app = express();
+bootstrap(app, express);

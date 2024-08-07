@@ -10,7 +10,7 @@ export const auth = (roles = []) => {
       if (err) next(new AppError("Expired or invalid token", 498));
 
       if (!roles.includes(decoded.role))
-        next(new AppError("Don't have enough privileges", 403));
+        next(new AppError("You don't have enough privileges", 403));
       
       req.user = decoded;
       next();
