@@ -1,9 +1,10 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { customAlphabet } from "nanoid";
 import { AppError, asyncErrorHandler } from "../../utils/error.js";
 import { sendEmail } from "../../services/email.js";
-import User from "../../../database/models/user.model.js";
 import { confirmHtml, resendHtml } from "../../services/html.js";
+import User from "../../../database/models/user.model.js";
 
 // Sign up
 // ============================================
@@ -53,7 +54,7 @@ const confirmEmail = asyncErrorHandler(async (req, res, next) => {
 
       const user = await User.findOneAndUpdate(
         {
-          email: decoded?.email,
+          email: decoded.email,
           confirmed: false,
         },
         { confirmed: true },
@@ -93,7 +94,9 @@ const resendConfirmation = asyncErrorHandler(async (req, res, next) => {
 
   await sendEmail(decoded.email, "Confirmation message", resendHtml(link));
 
-  res.status(200).json({ message: "Check your inbox: New confirmation message has been sent" });
+  res.status(200).json({
+    message: "Check your inbox: New confirmation message has been sent",
+  });
 });
 
 // Sign in
@@ -101,11 +104,79 @@ const resendConfirmation = asyncErrorHandler(async (req, res, next) => {
 const signIn = asyncErrorHandler(async (req, res, next) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
-  if (!user && password !== user.password)
-    throw new AppError("Invalid credentials", 401);
+  const user = await User.findOne({ email, confirmed: true });
+  if (!user || !bcrypt.compareSync(password, user.password))
+    return next(new AppError("Invalid credentials", 401));
 
-  res.status(200).json({ message: "success", user });
+  const token = jwt.sign(
+    { userId: user._id, role: user.role },
+    process.env.SIGNIN_VERIFY_SIGNATURE,
+    { expiresIn: "1d" }
+  );
+
+  user.loggedIn = true;
+  await user.save();
+
+  res.status(200).json({ message: "success", token });
 });
 
-export { signUp, confirmEmail, resendConfirmation, signIn };
+// Forget password
+// ============================================
+const forgetPassword = asyncErrorHandler(async (req, res, next) => {
+  const { email } = req.body;
+
+  const nanoid = customAlphabet("1234567890", 5);
+  const otp = nanoid();
+
+  await sendEmail(email, "OTP code", `<p>Your otp is: <b>${otp}</b></p>`);
+
+  const user = await User.findOneAndUpdate(
+    { email },
+    { otp, confirmOtp: false }
+  );
+  if (!user) return next(new AppError("User not found", 404));
+
+  res.status(200).json({ message: "success" });
+});
+
+// Confirm otp
+// ============================================
+const confirmOtp = asyncErrorHandler(async (req, res, next) => {
+  const { otp } = req.body;
+
+  const user = await User.findOneAndUpdate(
+    { otp },
+    { otp: "", confirmOtp: true }
+  );
+  if (!user) return next(new AppError("Invalid otp", 400));
+
+  res.status(200).json({ message: "success" });
+});
+
+// Reset password
+// ============================================
+const resetPassword = asyncErrorHandler(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  const hashedPassword = bcrypt.hashSync(password, +process.env.SALT_ROUNDS);
+
+  const user = await User.findOneAndUpdate(
+    { email, confirmOtp: true },
+    { password: hashedPassword }
+  );
+  if (!user) return next(new AppError("User not found", 404));
+
+  res.status(200).json({ message: "success" });
+});
+
+
+
+export {
+  signUp,
+  confirmEmail,
+  resendConfirmation,
+  signIn,
+  forgetPassword,
+  confirmOtp,
+  resetPassword,
+};

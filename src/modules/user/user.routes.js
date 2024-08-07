@@ -10,5 +10,16 @@ userRouter.post("/signup", validate(UV.signUpSchema), checkIfUser, UC.signUp);
 userRouter.get("/confirm/:token", UC.confirmEmail);
 userRouter.get("/resend/:reToken", UC.resendConfirmation);
 userRouter.post("/signin", UC.signIn);
+userRouter.patch(
+  "/forgetPassword",
+  validate(UV.forgetPasswordSchema),
+  UC.forgetPassword
+);
+userRouter.patch("/confirmOtp", validate(UV.confirmOtpSchema), UC.confirmOtp);
+userRouter.patch(
+  "/resetPassword",
+  validate(UV.resetPasswordSchema),
+  UC.resetPassword
+);
 
 export default userRouter;
