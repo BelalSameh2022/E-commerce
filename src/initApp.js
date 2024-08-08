@@ -10,6 +10,7 @@ const initApp = (app, express) => {
   app.use("/users", routers.userRouter);
   app.use("/categories", routers.categoryRouter);
   app.use("/subCategories", routers.subCategoryRouter);
+  app.use("/brands", routers.brandRouter);
   
   dbConnection();
 

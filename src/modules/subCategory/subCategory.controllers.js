@@ -10,9 +10,10 @@ import SubCategory from "../../../database/models/subCategory.model.js";
 const addSubCategory = asyncErrorHandler(async (req, res, next) => {
   const { name } = req.body;
   const { categoryId } = req.params;
+  const { userId } = req.user;
 
-  const category = await Category.findById(categoryId);
-  if (!category) return next(new AppError("Category not found", 404));
+  const category = await Category.findOne({_id: categoryId, addedBy: userId});
+  if (!category) return next(new AppError("Category not found or you don't have permission", 404));
 
   const folderId = nanoid(5);
   const { secure_url, public_id } = await cloudinary.uploader.upload(
