@@ -1,5 +1,6 @@
 import joi from "joi";
 import { generalFiled } from "../../utils/generalFields.js";
+import role from "../../utils/role.js";
 
 const signUpSchema = {
   body: joi
@@ -16,6 +17,7 @@ const signUpSchema = {
         .max(2)
         .required(),
       addresses: joi.array().items(joi.string()).min(1).max(2).required(),
+      role: joi.string().valid(...Object.values(role)),
     })
     .required(),
 };
@@ -23,18 +25,8 @@ const signUpSchema = {
 const signInSchema = {
   body: joi
     .object({
-      name: generalFiled.name.required(),
       email: generalFiled.email.required(),
       password: generalFiled.password.required(),
-      confirmPassword: generalFiled.confirmPassword.required(),
-      age: joi.number().min(18).max(60).required(),
-      phoneNumbers: joi
-        .array()
-        .items(generalFiled.phoneNumber)
-        .min(1)
-        .max(2)
-        .required(),
-      addresses: joi.array().items(joi.string()).min(1).max(2).required(),
     })
     .required(),
 };

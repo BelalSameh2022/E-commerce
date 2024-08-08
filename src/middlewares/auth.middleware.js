@@ -6,7 +6,7 @@ export const auth = (roles = []) => {
     const { token } = req.headers;
     if (!token) next(new AppError("Token is missed", 401));
 
-    jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+    jwt.verify(token, process.env.SIGNIN_VERIFY_SIGNATURE, (err, decoded) => {
       if (err) next(new AppError("Expired or invalid token", 498));
 
       if (!roles.includes(decoded.role))

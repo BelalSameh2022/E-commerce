@@ -9,7 +9,7 @@ const userRouter = Router();
 userRouter.post("/signup", validate(UV.signUpSchema), checkIfUser, UC.signUp);
 userRouter.get("/confirm/:token", UC.confirmEmail);
 userRouter.get("/resend/:reToken", UC.resendConfirmation);
-userRouter.post("/signin", UC.signIn);
+userRouter.post("/signin", validate(UV.signInSchema), UC.signIn);
 userRouter.patch(
   "/forgetPassword",
   validate(UV.forgetPasswordSchema),

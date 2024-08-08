@@ -9,7 +9,7 @@ import User from "../../../database/models/user.model.js";
 // Sign up
 // ============================================
 const signUp = asyncErrorHandler(async (req, res, next) => {
-  const { name, email, password, age, phoneNumbers, addresses } = req.body;
+  const { name, email, password, age, phoneNumbers, addresses, role = "User" } = req.body;
 
   const token = jwt.sign(
     { email },
@@ -35,6 +35,7 @@ const signUp = asyncErrorHandler(async (req, res, next) => {
     age,
     phoneNumbers,
     addresses,
+    role
   });
 
   if (!user) return next(new AppError("User not created", 400));
@@ -106,7 +107,7 @@ const signIn = asyncErrorHandler(async (req, res, next) => {
 
   const user = await User.findOne({ email, confirmed: true });
   if (!user || !bcrypt.compareSync(password, user.password))
-    return next(new AppError("Invalid credentials", 401));
+    return next(new AppError("Invalid credentials or not confirmed yet", 401));
 
   const token = jwt.sign(
     { userId: user._id, role: user.role },

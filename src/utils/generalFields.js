@@ -4,12 +4,12 @@ import { Types } from "mongoose";
 const validationObjectId = (value, helper) => {
   return Types.ObjectId.isValid(value)
     ? true
-    : helper.message("invalid object _id");
+    : helper.message("Invalid objectId");
 };
 
 export const generalFiled = {
   id: joi.string().custom(validationObjectId),
-  name: joi.string().min(3).max(20),
+  name: joi.string().min(3).max(25),
   email: joi.string().email(),
   password: joi.string().pattern(/^(?=.*?[a-z])(?=.*?[0-9]).{8,}$/),
   confirmPassword: joi.string().valid(joi.ref("password")),

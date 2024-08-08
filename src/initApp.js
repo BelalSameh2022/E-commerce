@@ -1,16 +1,19 @@
-import dbConnection from "../database/connection.js";
 import * as routers from "./modules/index.routes.js";
+import dbConnection from "../database/connection.js";
 import { globalErrorHandler, invalidUrlHandler } from "./utils/error.js";
 
-const bootstrap = (app, express) => {
-  dbConnection();
-
+const initApp = (app, express) => {
+  
   app.use(express.json());
   app.use(express.static("uploads"));
-
+  
   app.use("/users", routers.userRouter);
+  app.use("/categories", routers.categoryRouter);
+  app.use("/subCategories", routers.subCategoryRouter);
+  
+  dbConnection();
 
-  app.use(invalidUrlHandler);
+  app.use("*", invalidUrlHandler);
   app.use(globalErrorHandler);
 
   const port = process.env.PORT || 3001;
@@ -19,4 +22,4 @@ const bootstrap = (app, express) => {
   });
 };
 
-export default bootstrap;
+export default initApp;
