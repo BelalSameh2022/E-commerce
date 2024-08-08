@@ -7,27 +7,27 @@ import { auth } from "../../middlewares/auth.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 import { checkIfSubCategory } from "../../middlewares/checkIfExists.middleware.js";
 
-const subCategoryRouter = Router();
+const subCategoryRouter = Router({ mergeParams: true });
 
 subCategoryRouter
   .route("/")
   .post(
     upload.single("image"),
-    // validate(SCV.addSubCategorySchema),
+    validate(SCV.addSubCategorySchema),
     auth([role.admin]),
     checkIfSubCategory,
     SCC.addSubCategory
-  )
-  // .get(SCC.getAllSubCategories);
+  );
+// .get(SCC.getAllSubCategories);
 
-// subCategoryRouter
-//   .route("/:subCategoryId")
-//   .put(
-//     upload.single("image"),
-//     validate(SCV.updatesubCategorySchema),
-//     auth([role.admin]),
-//     SCC.updatesubCategory
-//   )
+subCategoryRouter
+  .route("/:subCategoryId")
+  .put(
+    upload.single("image"),
+    validate(SCV.updateSubCategorySchema),
+    auth([role.admin]),
+    SCC.updateSubCategory
+  )
 //   .delete(auth([role.admin]), SCC.deletesubCategory);
 
 export default subCategoryRouter;

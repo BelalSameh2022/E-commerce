@@ -1,17 +1,22 @@
 import joi from "joi";
 import { generalFiled } from "../../utils/generalFields.js";
 
-const addCategorySchema = {
+const addSubCategorySchema = {
   body: joi
     .object({
       name: generalFiled.name.required(),
+    })
+    .required(),
+  params: joi
+    .object({
+      categoryId: generalFiled.id.required(),
     })
     .required(),
   file: generalFiled.file.required(),
   headers: generalFiled.headers.required(),
 };
 
-const updateCategorySchema = {
+const updateSubCategorySchema = {
   body: joi
     .object({
       name: generalFiled.name,
@@ -19,6 +24,12 @@ const updateCategorySchema = {
     .required(),
   file: generalFiled.file,
   headers: generalFiled.headers.required(),
+  params: joi
+    .object({
+      // categoryId: generalFiled.id.required(),
+      subCategoryId: generalFiled.id.required(),
+    })
+    .required(),
 };
 
-export { addCategorySchema, updateCategorySchema };
+export { addSubCategorySchema, updateSubCategorySchema };

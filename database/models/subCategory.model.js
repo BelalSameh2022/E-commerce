@@ -4,24 +4,25 @@ const subCategorySchema = new Schema(
   {
     name: {
       type: String,
-      required: [true, "name is required"],
+      required: true,
       trim: true,
       lowercase: true,
       minLength: 3,
-      maxLength: 20,
+      maxLength: 25,
       unique: true,
     },
     slug: {
       type: String,
-      required: [true, "slug is required"],
+      required: true,
       trim: true,
     },
     image: {
       secure_url: String,
       public_id: String,
     },
-    customId: {
+    folderId: {
       type: String,
+      required: true,
     },
     category: {
       type: Types.ObjectId,

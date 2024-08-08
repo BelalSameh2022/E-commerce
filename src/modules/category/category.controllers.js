@@ -9,11 +9,11 @@ import Category from "../../../database/models/category.model.js";
 const addCategory = asyncErrorHandler(async (req, res, next) => {
   const { name } = req.body;
 
-  const customId = nanoid(5);
+  const folderId = nanoid(5);
   const { secure_url, public_id } = await cloudinary.uploader.upload(
     req.file.path,
     {
-      folder: `E-commerce/Categories/${customId}`,
+      folder: `E-commerce/Categories/${folderId}`,
     }
   );
 
@@ -24,7 +24,7 @@ const addCategory = asyncErrorHandler(async (req, res, next) => {
       lower: true,
     }),
     image: { secure_url, public_id },
-    customId,
+    folderId,
     addedBy: req.user.userId,
   });
   if (!category) return next(new AppError("Category not added", 400));
@@ -66,7 +66,7 @@ const updateCategory = asyncErrorHandler(async (req, res, next) => {
     const { secure_url, public_id } = await cloudinary.uploader.upload(
       req.file.path,
       {
-        folder: `E-commerce/Categories/${category.customId}`,
+        folder: `E-commerce/Categories/${category.folderId}`,
       }
     );
 
@@ -89,8 +89,8 @@ const deleteCategory = asyncErrorHandler(async (req, res, next) => {
   });
   if (!category) return next(new AppError("Category not found or already deleted", 404));
 
-  await cloudinary.api.delete_resources_by_prefix(`E-commerce/Categories/${category.customId}`);
-  await cloudinary.api.delete_folder(`E-commerce/Categories/${category.customId}`);
+  await cloudinary.api.delete_resources_by_prefix(`E-commerce/Categories/${category.folderId}`);
+  await cloudinary.api.delete_folder(`E-commerce/Categories/${category.folderId}`);
 
   res.status(200).json({ message: "success", category });
 });

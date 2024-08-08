@@ -4,29 +4,30 @@ const categorySchema = new Schema(
   {
     name: {
       type: String,
-      required: [true, "name is required"],
+      required: true,
       trim: true,
-      unique: true,
       lowercase: true,
       minLength: 3,
       maxLength: 25,
+      unique: true,
     },
     slug: {
       type: String,
-      required: [true, "slug is required"],
+      required: true,
       trim: true,
     },
     image: {
       secure_url: String,
       public_id: String,
     },
-    customId: {
+    folderId: {
       type: String,
+      required: true,
     },
     addedBy: {
       type: Types.ObjectId,
       ref: "User",
-      required: [true, "addedBy is required"],
+      required: true,
     },
   },
   {
