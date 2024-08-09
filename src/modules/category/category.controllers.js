@@ -65,7 +65,7 @@ const updateCategory = asyncErrorHandler(async (req, res, next) => {
   const { name } = req.body;
 
   if (!name && !req.file)
-    return next(new AppError("There is no data for update", 400));
+    return next(new AppError("Nothing to update", 400));
 
   const category = await Category.findOne({
     _id: categoryId,

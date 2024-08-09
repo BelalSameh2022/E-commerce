@@ -17,17 +17,18 @@ brandRouter
     auth([role.admin]),
     checkIfBrand,
     BC.addBrand
-  );
-// .get(BC.getAllSubCategories);
+  )
+.get(BC.getAllBrands);
 
-// brandRouter
-//   .route("/:subCategoryId")
-//   .put(
-//     upload.single("image"),
-//     validate(BV.updateSubCategorySchema),
-//     auth([role.admin]),
-//     BC.updateSubCategory
-//   )
-//   .delete(auth([role.admin]), BC.deletesubCategory);
+brandRouter
+  .route("/:brandId")
+  .get(BC.getBrand)
+  .put(
+    upload.single("image"),
+    validate(BV.updateBrandSchema),
+    auth([role.admin]),
+    BC.updateBrand
+  )
+  .delete(auth([role.admin]), BC.deleteBrand);
 
 export default brandRouter;

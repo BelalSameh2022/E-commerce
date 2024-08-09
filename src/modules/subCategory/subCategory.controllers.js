@@ -86,7 +86,7 @@ const updateSubCategory = asyncErrorHandler(async (req, res, next) => {
   const { name } = req.body;
 
   if (!name && !req.file)
-    return next(new AppError("There is no data sent for update", 400));
+    return next(new AppError("Nothing to update", 400));
 
   const subCategory = await SubCategory.findOne({
     _id: subCategoryId,

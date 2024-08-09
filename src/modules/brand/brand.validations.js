@@ -11,4 +11,14 @@ const addBrandSchema = {
   headers: generalFiled.headers.required(),
 };
 
-export { addBrandSchema };
+const updateBrandSchema = {
+  body: joi
+    .object({
+      name: generalFiled.name,
+    })
+    .required(),
+  file: generalFiled.file,
+  headers: generalFiled.headers.required(),
+};
+
+export { addBrandSchema, updateBrandSchema };
