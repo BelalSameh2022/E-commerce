@@ -21,10 +21,11 @@ categoryRouter
     checkIfCategory,
     CC.addCategory
   )
-  .get(CC.getAllCategories);
+  .get(CC.getCategories);
 
 categoryRouter
   .route("/:categoryId")
+  .get(CC.getCategory)
   .put(
     upload.single("image"),
     validate(CV.updateCategorySchema),

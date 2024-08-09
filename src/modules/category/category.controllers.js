@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 import cloudinary from "../../utils/cloudinary.js";
 import { AppError, asyncErrorHandler } from "../../utils/error.js";
 import Category from "../../../database/models/category.model.js";
+import SubCategory from "../../../database/models/subCategory.model.js";
 
 // Add category
 // ============================================
@@ -27,24 +28,53 @@ const addCategory = asyncErrorHandler(async (req, res, next) => {
     folderId,
     addedBy: req.user.userId,
   });
-  if (!category) return next(new AppError("Category not added", 400));
+  if (!category) return next(new AppError("Category addition failed", 400));
 
   res.status(201).json({ message: "success", category });
+});
+
+// Get categories
+// ============================================
+const getCategories = asyncErrorHandler(async (req, res, next) => {
+  const categories = await Category.find({}).populate("subCategories", "name -_id -category");
+  if (categories.length === 0)
+    return next(new AppError("No categories added yet", 404));
+
+  res.status(200).json({ message: "success", categories });
+});
+
+// Get category
+// ============================================
+const getCategory = asyncErrorHandler(async (req, res, next) => {
+  const { categoryId } = req.params;
+
+  const category = await Category.findOne({ _id: categoryId }).populate({
+    path: "subCategories",
+    select: "name -_id -category",
+  });
+  if (!category) return next(new AppError("Category not found", 404));
+
+  res.status(200).json({ message: "success", category });
 });
 
 // Update category
 // ============================================
 const updateCategory = asyncErrorHandler(async (req, res, next) => {
+  const { userId } = req.user;
   const { categoryId } = req.params;
   const { name } = req.body;
 
-  if (!name && !req.file) return next(new AppError("There is no data for update", 400));
+  if (!name && !req.file)
+    return next(new AppError("There is no data for update", 400));
 
   const category = await Category.findOne({
     _id: categoryId,
-    addedBy: req.user.userId,
+    addedBy: userId,
   });
-  if (!category) return next(new AppError("Category not found", 404));
+  if (!category)
+    return next(
+      new AppError("Category not found or you don't have permission", 404)
+    );
 
   if (name) {
     if (name.toLowerCase() === category.name) {
@@ -81,28 +111,34 @@ const updateCategory = asyncErrorHandler(async (req, res, next) => {
 // Delete category
 // ============================================
 const deleteCategory = asyncErrorHandler(async (req, res, next) => {
+  const { userId } = req.user;
   const { categoryId } = req.params;
 
   const category = await Category.findOneAndDelete({
     _id: categoryId,
-    addedBy: req.user.userId,
+    addedBy: userId,
   });
-  if (!category) return next(new AppError("Category not found or already deleted", 404));
+  if (!category)
+    return next(
+      new AppError("Category not found or you don't have permission", 404)
+    );
 
-  await cloudinary.api.delete_resources_by_prefix(`E-commerce/Categories/${category.folderId}`);
-  await cloudinary.api.delete_folder(`E-commerce/Categories/${category.folderId}`);
+  await SubCategory.deleteMany({ category: category._id });
+
+  await cloudinary.api.delete_resources_by_prefix(
+    `E-commerce/Categories/${category.folderId}`
+  );
+  await cloudinary.api.delete_folder(
+    `E-commerce/Categories/${category.folderId}`
+  );
 
   res.status(200).json({ message: "success", category });
 });
 
-// Get all categories
-// ============================================
-const getAllCategories = asyncErrorHandler(async (req, res, next) => {
-  const categories = await Category.find({});
-  if (categories.length === 0)
-    return next(new AppError("No categories added yet", 404));
-
-  res.status(200).json({ message: "success", categories });
-});
-
-export { addCategory, updateCategory, deleteCategory, getAllCategories };
+export {
+  addCategory,
+  getCategories,
+  getCategory,
+  updateCategory,
+  deleteCategory,
+};

@@ -33,8 +33,16 @@ const categorySchema = new Schema(
   {
     versionKey: false,
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
+
+categorySchema.virtual("subCategories", {
+  ref: "SubCategory",
+  localField: "_id",
+  foreignField: "category",
+});
 
 const Category = model("Category", categorySchema);
 

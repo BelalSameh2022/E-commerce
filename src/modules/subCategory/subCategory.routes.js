@@ -17,8 +17,8 @@ subCategoryRouter
     auth([role.admin]),
     checkIfSubCategory,
     SCC.addSubCategory
-  );
-// .get(SCC.getAllSubCategories);
+  )
+  .get(SCC.getSubCategories);
 
 subCategoryRouter
   .route("/:subCategoryId")
@@ -28,6 +28,6 @@ subCategoryRouter
     auth([role.admin]),
     SCC.updateSubCategory
   )
-//   .delete(auth([role.admin]), SCC.deletesubCategory);
+  .delete(auth([role.admin]), SCC.deleteSubCategory);
 
 export default subCategoryRouter;

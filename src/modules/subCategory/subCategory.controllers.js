@@ -12,8 +12,11 @@ const addSubCategory = asyncErrorHandler(async (req, res, next) => {
   const { categoryId } = req.params;
   const { userId } = req.user;
 
-  const category = await Category.findOne({_id: categoryId, addedBy: userId});
-  if (!category) return next(new AppError("Category not found or you don't have permission", 404));
+  const category = await Category.findOne({ _id: categoryId, addedBy: userId });
+  if (!category)
+    return next(
+      new AppError("Category not found or you don't have permission", 404)
+    );
 
   const folderId = nanoid(5);
   const { secure_url, public_id } = await cloudinary.uploader.upload(
@@ -32,9 +35,10 @@ const addSubCategory = asyncErrorHandler(async (req, res, next) => {
     image: { secure_url, public_id },
     folderId,
     category: categoryId,
-    addedBy: req.user.userId,
+    addedBy: userId,
   });
-  if (!subCategory) return next(new AppError("SubCategory not added", 400));
+  if (!subCategory)
+    return next(new AppError("SubCategory addition failed", 400));
 
   res.status(201).json({ message: "success", subCategory });
 });
@@ -44,18 +48,20 @@ const addSubCategory = asyncErrorHandler(async (req, res, next) => {
 const updateSubCategory = asyncErrorHandler(async (req, res, next) => {
   const { subCategoryId } = req.params;
   const { name } = req.body;
+  const { userId } = req.user;
 
-  if (!name && !req.file) return next(new AppError("There is no date for update", 400));
+  if (!name && !req.file)
+    return next(new AppError("There is no data for update", 400));
 
   const subCategory = await SubCategory.findOne({
     _id: subCategoryId,
-    addedBy: req.user.userId,
+    addedBy: userId,
   });
   if (!subCategory) return next(new AppError("SubCategory not found", 404));
 
   const category = await Category.findOne({
     _id: subCategory.category,
-    addedBy: req.user.userId,
+    addedBy: userId,
   });
   if (!category) return next(new AppError("Category not found", 404));
 
@@ -94,27 +100,60 @@ const updateSubCategory = asyncErrorHandler(async (req, res, next) => {
 // Delete subCategory
 // ============================================
 const deleteSubCategory = asyncErrorHandler(async (req, res, next) => {
-  const { categoryId } = req.params;
+  const { subCategoryId } = req.params;
+  const { userId } = req.user;
 
-  const category = await Category.findOneAndDelete({
-    _id: categoryId,
-    addedBy: req.user.userId,
+  const subCategory = await SubCategory.findOneAndDelete({
+    _id: subCategoryId,
+    addedBy: userId,
   });
-  if (!category) return next(new AppError("Category not found or already deleted", 404));
+  if (!subCategory)
+    return next(
+      new AppError("SubCategory not found or you don't have permission", 404)
+    );
 
-  await cloudinary.api.delete_resources_by_prefix(category.folderId);
+  const category = await Category.findOne({
+    _id: subCategory.category,
+    addedBy: userId,
+  });
+  if (!category)
+    return next(
+      new AppError("Category not found or you don't have permission", 404)
+    );
 
-  res.status(200).json({ message: "success" });
+  await cloudinary.api.delete_resources_by_prefix(
+    `E-commerce/Categories/${category.folderId}/SubCategories/${subCategory.folderId}`
+  );
+  await cloudinary.api.delete_folder(
+    `E-commerce/Categories/${category.folderId}/SubCategories/${subCategory.folderId}`
+  );
+
+  res.status(200).json({ message: "success", subCategory });
 });
 
 // Get all subCategories
 // ============================================
-const getAllSubCategories = asyncErrorHandler(async (req, res, next) => {
-  const categories = await Category.find({});
-  if (categories.length === 0)
-    return next(new AppError("No categories added yet", 404));
+const getSubCategories = asyncErrorHandler(async (req, res, next) => {
+  const { categoryId } = req.params;
 
-  res.status(200).json({ message: "success", categories });
+  const category = await Category.findOne({ _id: categoryId });
+  if (!category) return next(new AppError("Category not found", 404));
+
+  const subCategories = await SubCategory.find({
+    category: categoryId,
+  }).populate([
+    { path: "category", select: "name -_id" },
+    { path: "addedBy", select: "name -_id" },
+  ]);
+  if (subCategories.length === 0)
+    return next(new AppError("No subCategories added yet", 404));
+
+  res.status(200).json({ message: "success", subCategories });
 });
 
-export { addSubCategory, updateSubCategory, deleteSubCategory, getAllSubCategories };
+export {
+  addSubCategory,
+  updateSubCategory,
+  deleteSubCategory,
+  getSubCategories,
+};
