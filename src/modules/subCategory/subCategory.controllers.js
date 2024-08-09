@@ -8,9 +8,9 @@ import SubCategory from "../../../database/models/subCategory.model.js";
 // Add subCategory
 // ============================================
 const addSubCategory = asyncErrorHandler(async (req, res, next) => {
-  const { name } = req.body;
-  const { categoryId } = req.params;
   const { userId } = req.user;
+  const { categoryId } = req.params;
+  const { name } = req.body;
 
   const category = await Category.findOne({ _id: categoryId, addedBy: userId });
   if (!category)
@@ -43,27 +43,62 @@ const addSubCategory = asyncErrorHandler(async (req, res, next) => {
   res.status(201).json({ message: "success", subCategory });
 });
 
+// Get subCategories
+// ============================================
+const getSubCategories = asyncErrorHandler(async (req, res, next) => {
+  const { categoryId } = req.params;
+
+  const category = await Category.findOne({ _id: categoryId });
+  if (!category) return next(new AppError("Category not found", 404));
+
+  const subCategories = await SubCategory.find({
+    category: category._id,
+  }).populate([
+    { path: "category", select: "name -_id" },
+    { path: "addedBy", select: "name -_id" },
+  ]);
+  if (subCategories.length === 0)
+    return next(new AppError("No subCategories added yet", 404));
+
+  res.status(200).json({ message: "success", subCategories });
+});
+
+// Get subCategory
+// ============================================
+const getSubCategory = asyncErrorHandler(async (req, res, next) => {
+  const { subCategoryId } = req.params;
+
+  const subCategory = await SubCategory.findById(subCategoryId).populate([
+    { path: "category", select: "name -_id" },
+    { path: "addedBy", select: "name -_id" },
+  ]);
+  if (!subCategory)
+    return next(new AppError("SubCategory not found", 404));
+
+  res.status(200).json({ message: "success", subCategory });
+});
+
 // Update subCategory
 // ============================================
 const updateSubCategory = asyncErrorHandler(async (req, res, next) => {
+  const { userId } = req.user;
   const { subCategoryId } = req.params;
   const { name } = req.body;
-  const { userId } = req.user;
 
   if (!name && !req.file)
-    return next(new AppError("There is no data for update", 400));
+    return next(new AppError("There is no data sent for update", 400));
 
   const subCategory = await SubCategory.findOne({
     _id: subCategoryId,
     addedBy: userId,
   });
-  if (!subCategory) return next(new AppError("SubCategory not found", 404));
+  if (!subCategory) return next(new AppError("SubCategory not found or you don't have permission", 404));
 
   const category = await Category.findOne({
     _id: subCategory.category,
     addedBy: userId,
   });
-  if (!category) return next(new AppError("Category not found", 404));
+  if (!category) return next(new AppError("Category not found or you don't have permission", 404));
 
   if (name) {
     if (name.toLowerCase() === subCategory.name) {
@@ -100,8 +135,8 @@ const updateSubCategory = asyncErrorHandler(async (req, res, next) => {
 // Delete subCategory
 // ============================================
 const deleteSubCategory = asyncErrorHandler(async (req, res, next) => {
-  const { subCategoryId } = req.params;
   const { userId } = req.user;
+  const { subCategoryId } = req.params;
 
   const subCategory = await SubCategory.findOneAndDelete({
     _id: subCategoryId,
@@ -131,29 +166,10 @@ const deleteSubCategory = asyncErrorHandler(async (req, res, next) => {
   res.status(200).json({ message: "success", subCategory });
 });
 
-// Get all subCategories
-// ============================================
-const getSubCategories = asyncErrorHandler(async (req, res, next) => {
-  const { categoryId } = req.params;
-
-  const category = await Category.findOne({ _id: categoryId });
-  if (!category) return next(new AppError("Category not found", 404));
-
-  const subCategories = await SubCategory.find({
-    category: categoryId,
-  }).populate([
-    { path: "category", select: "name -_id" },
-    { path: "addedBy", select: "name -_id" },
-  ]);
-  if (subCategories.length === 0)
-    return next(new AppError("No subCategories added yet", 404));
-
-  res.status(200).json({ message: "success", subCategories });
-});
-
 export {
   addSubCategory,
+  getSubCategories,
+  getSubCategory,
   updateSubCategory,
   deleteSubCategory,
-  getSubCategories,
 };

@@ -22,6 +22,7 @@ subCategoryRouter
 
 subCategoryRouter
   .route("/:subCategoryId")
+  .get(SCC.getSubCategory)
   .put(
     upload.single("image"),
     validate(SCV.updateSubCategorySchema),

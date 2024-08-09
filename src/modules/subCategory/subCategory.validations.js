@@ -26,7 +26,6 @@ const updateSubCategorySchema = {
   headers: generalFiled.headers.required(),
   params: joi
     .object({
-      // categoryId: generalFiled.id.required(),
       subCategoryId: generalFiled.id.required(),
     })
     .required(),
