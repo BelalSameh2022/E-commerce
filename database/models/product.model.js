@@ -18,7 +18,7 @@ const productSchema = new Schema(
     },
     description: {
       type: String,
-      required: true,
+      default: '',
       trim: true,
     },
     image: {
@@ -62,7 +62,6 @@ const productSchema = new Schema(
     price: {
       type: Number,
       required: true,
-      default: 1,
       min: 1
     },
     discount: {
@@ -73,15 +72,17 @@ const productSchema = new Schema(
     },
     priceAfterDiscount: {
       type: Number,
-      default: 1,
     },
     stock: {
       type: Number,
       required: true,
+      min: 0,
     },
     rateAverage: {
       type: Number,
       default: 0,
+      min: 0,
+      max: 5,
     },
   },
   {
