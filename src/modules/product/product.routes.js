@@ -13,19 +13,19 @@ productRouter
   .route("/")
   .post(
     upload.fields([
-      {name: "image", maxCount: 1},
-      {name: "associatedImages", maxCount: 3},
+      { name: "image", maxCount: 1 },
+      { name: "associatedImages", maxCount: 3 },
     ]),
     validate(PV.addProductSchema),
     auth([role.admin]),
     checkIfProduct,
     PC.addProduct
   )
-// .get(PC.getAllproducts);
+  .get(PC.getAllProducts);
 
-// productRouter
-//   .route("/:productId")
-//   .get(PC.getproduct)
+productRouter
+  .route("/:productId")
+  .get(PC.getProduct)
 //   .put(
 //     upload.single("image"),
 //     validate(PV.updateproductSchema),
