@@ -4,6 +4,7 @@ import Category from "../../database/models/category.model.js";
 import SubCategory from "../../database/models/subCategory.model.js";
 import Brand from "../../database/models/brand.model.js";
 import Product from "../../database/models/product.model.js";
+import Coupon from "../../database/models/coupon.model.js";
 
 const checkIfExists = (model, fieldName, fieldMessage) => {
   return async (req, res, next) => {
@@ -21,6 +22,7 @@ const checkIfCategory = checkIfExists(Category, "name", "Category");
 const checkIfSubCategory = checkIfExists(SubCategory, "name", "SubCategory");
 const checkIfBrand = checkIfExists(Brand, "name", "Brand");
 const checkIfProduct = checkIfExists(Product, "name", "Product");
+const checkIfCoupon = checkIfExists(Coupon, "code", "Coupon");
 
 export {
   checkIfUser,
@@ -28,4 +30,5 @@ export {
   checkIfSubCategory,
   checkIfBrand,
   checkIfProduct,
+  checkIfCoupon
 };

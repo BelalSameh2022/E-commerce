@@ -11,6 +11,7 @@ const initApp = (app, express) => {
   app.use("/subCategories", routers.subCategoryRouter);
   app.use("/brands", routers.brandRouter);
   app.use("/products", routers.productRouter);
+  app.use("/coupons", routers.couponRouter);
   
   dbConnection();
 

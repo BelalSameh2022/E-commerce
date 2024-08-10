@@ -26,12 +26,15 @@ productRouter
 productRouter
   .route("/:productId")
   .get(PC.getProduct)
-//   .put(
-//     upload.single("image"),
-//     validate(PV.updateproductSchema),
-//     auth([role.admin]),
-//     PC.updateproduct
-//   )
-//   .delete(auth([role.admin]), PC.deleteproduct);
+  .put(
+    upload.fields([
+      { name: "image", maxCount: 1 },
+      { name: "associatedImages", maxCount: 3 },
+    ]),
+    validate(PV.updateProductSchema),
+    auth([role.admin]),
+    PC.updateProduct
+  )
+  .delete(auth([role.admin]), PC.deleteProduct);
 
 export default productRouter;

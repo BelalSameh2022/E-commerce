@@ -25,10 +25,21 @@ const updateProductSchema = {
   body: joi
     .object({
       name: generalFiled.name,
+      description: joi.string(),
+      category: generalFiled.id,
+      subCategory: generalFiled.id,
+      brand: generalFiled.id,
+      price: joi.number().positive().min(1),
+      discount: joi.number().integer().min(1).max(100),
+      stock: joi.number().integer().min(1),
     })
     .required(),
-  file: generalFiled.file,
+  files: joi.object({ 
+    image: joi.array().items(generalFiled.file).length(1), 
+    associatedImages: joi.array().items(generalFiled.file).min(1).max(3) 
+  }),
   headers: generalFiled.headers.required(),
 };
+
 
 export { addProductSchema, updateProductSchema };

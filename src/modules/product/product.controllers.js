@@ -106,46 +106,77 @@ const getProduct = asyncErrorHandler(async (req, res, next) => {
 const updateProduct = asyncErrorHandler(async (req, res, next) => {
   const { userId } = req.user;
   const { productId } = req.params;
-  const { name } = req.body;
+  const {
+    name,
+    description,
+    category,
+    subCategory,
+    brand,
+    price,
+    discount,
+    stock,
+  } = req.body;
 
-  if (!name && !req.file) return next(new AppError("Nothing to update", 400));
+  if (!req.body && !req.files) return next(new AppError("Nothing to update", 400));
 
-  const product = await product.findOne({ _id: productId, addedBy: userId });
-  if (!product)
+  const category_ = await Category.findOne({ _id: category, addedBy: userId });
+  if (!category_)
     return next(
-      new AppError("product not found or you don't have permission", 404)
+      new AppError("Category not found or you don't have permission", 404)
     );
 
-  if (name) {
-    if (product.name === name.toLowerCase()) {
-      return next(new AppError("Already the same name", 400));
-    }
-    if (await product.findOne({ name: name.toLowerCase() })) {
-      return next(new AppError("product already exists", 409));
-    }
-
-    product.name = name;
-    product.slug = slugify(name, {
-      replacement: "_",
-      lower: true,
-    });
-  }
-
-  if (req.file) {
-    await cloudinary.uploader.destroy(product.logo.public_id);
-    const { secure_url, public_id } = await cloudinary.uploader.upload(
-      req.file.path,
-      {
-        folder: `E-commerce/products/${product.folderId}`,
-      }
+  const subCategory_ = await SubCategory.findOne({ _id: subCategory, category, addedBy: userId });
+  if (!subCategory_)
+    return next(
+      new AppError("SubCategory not found or you don't have permission", 404)
     );
 
-    product.logo = { secure_url, public_id };
-  }
+  const brand_ = await Brand.findOne({ _id: brand, addedBy: userId });
+  if (!brand_)
+    return next(
+      new AppError("Brand not found or you don't have permission", 404)
+    );
 
-  await product.save();
+  // const priceAfterDiscount = price - price * (discount / 100);
 
-  res.status(200).json({ message: "success", product });
+  console.log(req.files)
+
+  // const product = await Product.findOne({ _id: productId, addedBy: userId });
+  // if (!product)
+  //   return next(
+  //     new AppError("product not found or you don't have permission", 404)
+  //   );
+
+  // if (name) {
+  //   if (product.name === name.toLowerCase()) {
+  //     return next(new AppError("Already the same name", 400));
+  //   }
+  //   if (await product.findOne({ name: name.toLowerCase() })) {
+  //     return next(new AppError("product already exists", 409));
+  //   }
+
+  //   product.name = name;
+  //   product.slug = slugify(name, {
+  //     replacement: "_",
+  //     lower: true,
+  //   });
+  // }
+
+  // if (req.file) {
+  //   await cloudinary.uploader.destroy(product.logo.public_id);
+  //   const { secure_url, public_id } = await cloudinary.uploader.upload(
+  //     req.file.path,
+  //     {
+  //       folder: `E-commerce/products/${product.folderId}`,
+  //     }
+  //   );
+
+  //   product.logo = { secure_url, public_id };
+  // }
+
+  // await product.save();
+
+  res.status(200).json({ message: "success", product: req.files });
 });
 
 // Delete product
