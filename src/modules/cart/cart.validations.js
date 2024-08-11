@@ -9,4 +9,11 @@ const addToCartSchema = {
   headers: generalFiled.headers.required(),
 };
 
-export { addToCartSchema };
+const removeFromCartSchema = {
+  body: joi.object({
+    productId: generalFiled.id.required(),
+  }).required(),
+  headers: generalFiled.headers.required(),
+};
+
+export { addToCartSchema, removeFromCartSchema };

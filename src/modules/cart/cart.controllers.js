@@ -43,7 +43,7 @@ const addToCart = asyncErrorHandler(async (req, res, next) => {
 const getCart = asyncErrorHandler(async (req, res, next) => {
   const { userId } = req.user;
 
-  const cart = await cart.findOne({ user: userId });
+  const cart = await Cart.findOne({ user: userId });
   if (!cart) return next(new AppError("Cart not found", 404));
 
   res.status(200).json({ message: "success", cart });
@@ -55,13 +55,15 @@ const removeFromCart = asyncErrorHandler(async (req, res, next) => {
   const { userId } = req.user;
   const { productId } = req.body;
 
-  const cart = await Cart.findOne({ user: userId });
-  if (!cart) return next(new AppError("Cart not found", 404));
-
-  cart.products = cart.products.filter(
-    (product) => product.productId.toString() !== productId
+  const cart = await Cart.findOneAndUpdate(
+    { user: userId, "products.productId": productId },
+    { $pull: { products: { productId } } },
+    { new: true }
   );
-  await cart.save();
+  if (!cart)
+    return next(
+      new AppError("Product not found or already removed from cart", 404)
+    );
 
   res.status(200).json({ message: "success", cart });
 });
@@ -71,11 +73,12 @@ const removeFromCart = asyncErrorHandler(async (req, res, next) => {
 const clearCart = asyncErrorHandler(async (req, res, next) => {
   const { userId } = req.user;
 
-  const cart = await Cart.findOne({ user: userId });
-  if (!cart) return next(new AppError("Cart not found", 404));
-
-  cart.products = [];
-  await cart.save();
+  const cart = await Cart.findOneAndUpdate(
+    { user: userId },
+    { products: [] },
+    { new: true }
+  );
+  if (!cart || cart.products.length === 0) return next(new AppError("Cart not found or already cleared", 404));
 
   res.status(200).json({ message: "success", cart });
 });

@@ -10,11 +10,8 @@ const cartRouter = Router();
 cartRouter
   .route("/")
   .post(validate(CV.addToCartSchema), auth(Object.values(role)), CC.addToCart)
-  .get(auth(Object.values(role)), CC.getCart);
-
-// cartRouter
-//   .route("/:cartId")
-//   .put(validate(CV.updatecartSchema), auth(Object.values(role)))), CC.updatecart)
-//   .delete(auth(Object.values(role)))), CC.deletecart);
+  .get(auth(Object.values(role)), CC.getCart)
+  .patch(validate(CV.removeFromCartSchema), auth(Object.values(role)), CC.removeFromCart)
+  .put(auth(Object.values(role)), CC.clearCart);
 
 export default cartRouter;
