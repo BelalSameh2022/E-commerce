@@ -1,41 +1,18 @@
 import { model, Schema, Types } from "mongoose";
 
-const couponSchema = new Schema(
+const cartSchema = new Schema(
   {
-    code: {
-      type: String,
-      required: true,
-      trim: true,
-      lowercase: true,
-      minLength: 3,
-      maxLength: 25,
-      unique: true,
-    },
-    amount: {
-      type: Number,
-      required: true,
-    },
-    isPercentage: {
-      type: Boolean,
-      default: true,
-    },
-    addedBy: {
+    user: {
       type: Types.ObjectId,
       ref: "User",
       required: true,
     },
-    usedBy: [{
-      type: Types.ObjectId,
-      ref: "User",
-    }],
-    from: {
-      type: Date,
-      required: true,
-    },
-    to: {
-      type: Date,
-      required: true,
-    },
+    products: [
+      {
+        productId: { type: Types.ObjectId, ref: "Product", required: true },
+        quantity: { type: Number, required: true },
+      },
+    ],
   },
   {
     timestamps: true,
@@ -43,6 +20,6 @@ const couponSchema = new Schema(
   }
 );
 
-const Coupon = model("Coupon", couponSchema);
+const Cart = model("Cart", cartSchema);
 
-export default Coupon;
+export default Cart;

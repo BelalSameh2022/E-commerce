@@ -4,24 +4,17 @@ import * as CV from "./cart.validations.js";
 import role from "../../utils/role.js";
 import { auth } from "../../middlewares/auth.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
-// import { checkIfCart } from "../../middlewares/checkIfExists.middleware.js";
 
 const cartRouter = Router();
 
 cartRouter
   .route("/")
-  .post(
-    validate(CV.addCartSchema),
-    auth([role.admin]),
-    // checkIfCart,
-    CC.addCart
-  )
-
+  .post(validate(CV.addToCartSchema), auth(Object.values(role)), CC.addToCart)
+  .get(auth(Object.values(role)), CC.getCart);
 
 // cartRouter
 //   .route("/:cartId")
-//   .get(CC.getcart)
-//   .put(validate(CV.updatecartSchema), auth([role.admin]), CC.updatecart)
-//   .delete(auth([role.admin]), CC.deletecart);
+//   .put(validate(CV.updatecartSchema), auth(Object.values(role)))), CC.updatecart)
+//   .delete(auth(Object.values(role)))), CC.deletecart);
 
 export default cartRouter;

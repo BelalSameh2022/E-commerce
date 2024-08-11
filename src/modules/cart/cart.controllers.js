@@ -1,84 +1,83 @@
-import slugify from "slugify";
+import Cart from "../../../database/models/cart.model.js";
+import Product from "../../../database/models/product.model.js";
 import { AppError, asyncErrorHandler } from "../../utils/error.js";
-import Coupon from "../../../database/models/coupon.model.js";
 
-// Add coupon
+// Add to cart
 // ============================================
-const addCoupon = asyncErrorHandler(async (req, res, next) => {
+const addToCart = asyncErrorHandler(async (req, res, next) => {
   const { userId } = req.user;
-  const { code, amount, isPercentage = true, from, to } = req.body;
+  const { productId, quantity } = req.body;
 
-  const coupon = await Coupon.create({
-    code,
-    amount,
-    isPercentage,
-    from,
-    to,
-    addedBy: userId,
+  const product = await Product.findOne({
+    _id: productId,
+    stock: { $gte: quantity },
   });
-  if (!coupon) return next(new AppError("Coupon addition failed", 400));
+  if (!product)
+    return next(new AppError("Product not found or out of stock", 404));
 
-  res.status(201).json({ message: "success", coupon });
+  const cart = await Cart.findOne({ user: userId });
+  if (!cart) {
+    const newCart = await Cart.create({
+      user: userId,
+      products: [{ productId, quantity }],
+    });
+    return res.status(201).json({ message: "success", newCart });
+  }
+
+  let flag = false;
+  for (const product of cart.products) {
+    if (product.productId.toString() === productId) {
+      product.quantity = quantity;
+      flag = true;
+    }
+  }
+  if (!flag) cart.products.push({ productId, quantity });
+
+  await cart.save();
+
+  res.status(200).json({ message: "success", cart });
 });
 
-// Get coupons
+// Get cart
 // ============================================
-const getAllCoupons = asyncErrorHandler(async (req, res, next) => {
-  const coupons = await Coupon.find({});
-  if (coupons.length === 0)
-    return next(new AppError("There are no coupons added yet", 404));
-
-  res.status(200).json({ message: "success", coupons });
-});
-
-// Get coupon
-// ============================================
-const getCoupon = asyncErrorHandler(async (req, res, next) => {
-  const { couponId } = req.params;
-
-  const coupon = await Coupon.findById(couponId);
-  if (!coupon) return next(new AppError("Coupon not found", 404));
-
-  res.status(200).json({ message: "success", coupon });
-});
-
-// Update coupon
-// ============================================
-const updateCoupon = asyncErrorHandler(async (req, res, next) => {
+const getCart = asyncErrorHandler(async (req, res, next) => {
   const { userId } = req.user;
-  const { couponId } = req.params;
 
-  if (!req.body) return next(new AppError("There is no data to update", 400));
+  const cart = await cart.findOne({ user: userId });
+  if (!cart) return next(new AppError("Cart not found", 404));
 
-  const coupon = await Coupon.findOneAndUpdate(
-    { _id: couponId, addedBy: userId },
-    req.body,
-    { new: true }
+  res.status(200).json({ message: "success", cart });
+});
+
+// Remove from cart
+// ============================================
+const removeFromCart = asyncErrorHandler(async (req, res, next) => {
+  const { userId } = req.user;
+  const { productId } = req.body;
+
+  const cart = await Cart.findOne({ user: userId });
+  if (!cart) return next(new AppError("Cart not found", 404));
+
+  cart.products = cart.products.filter(
+    (product) => product.productId.toString() !== productId
   );
-  if (!coupon)
-    return next(
-      new AppError("Coupon not found or you don't have permission", 404)
-    );
+  await cart.save();
 
-  res.status(200).json({ message: "success", coupon });
+  res.status(200).json({ message: "success", cart });
 });
 
-// Delete coupon
+// Clear cart
 // ============================================
-const deleteCoupon = asyncErrorHandler(async (req, res, next) => {
+const clearCart = asyncErrorHandler(async (req, res, next) => {
   const { userId } = req.user;
-  const { couponId } = req.params;
 
-  const coupon = await Coupon.findOneAndDelete({
-    _id: couponId,
-    addedBy: userId,
-  });
-  if (!coupon)
-    return next(
-      new AppError("Coupon not found or you don't have permission", 404)
-    );
+  const cart = await Cart.findOne({ user: userId });
+  if (!cart) return next(new AppError("Cart not found", 404));
 
-  res.status(200).json({ message: "success", coupon });
+  cart.products = [];
+  await cart.save();
+
+  res.status(200).json({ message: "success", cart });
 });
 
-export { addCoupon, getAllCoupons, getCoupon, updateCoupon, deleteCoupon };
+export { addToCart, getCart, removeFromCart, clearCart };

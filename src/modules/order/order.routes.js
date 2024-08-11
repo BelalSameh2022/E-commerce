@@ -8,14 +8,14 @@ import { validate } from "../../middlewares/validate.middleware.js";
 
 const orderRouter = Router();
 
-orderRouter
-  .route("/")
-  .post(
-    validate(OV.addOrderSchema),
-    auth([role.admin]),
-    // checkIfOrder,
-    OC.addOrder
-  )
+// orderRouter
+//   .route("/")
+//   .post(
+//     validate(OV.addOrderSchema),
+//     auth([role.admin]),
+//     // checkIfOrder,
+//     OC.addOrder
+//   )
   // .get(OC.getAllOrders);
 
 // orderRouter
