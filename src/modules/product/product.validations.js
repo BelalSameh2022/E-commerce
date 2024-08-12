@@ -11,6 +11,7 @@ const addProductSchema = {
       brand: generalFiled.id.required(),
       price: joi.number().positive().min(1).required(),
       discount: joi.number().integer().min(1).max(100),
+      isPercentage: joi.boolean(),
       stock: joi.number().integer().min(1).required(),
     })
     .required(),
@@ -31,6 +32,7 @@ const updateProductSchema = {
       brand: generalFiled.id,
       price: joi.number().positive().min(1),
       discount: joi.number().integer().min(1).max(100),
+      isPercentage: joi.boolean(),
       stock: joi.number().integer().min(1),
     })
     .required(),

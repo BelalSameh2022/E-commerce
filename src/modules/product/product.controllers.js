@@ -6,6 +6,7 @@ import Category from "../../../database/models/category.model.js";
 import SubCategory from "../../../database/models/subCategory.model.js";
 import Brand from "../../../database/models/brand.model.js";
 import Product from "../../../database/models/product.model.js";
+import Review from "../../../database/models/review.model.js";
 
 // Add product
 // ============================================
@@ -45,7 +46,7 @@ const addProduct = asyncErrorHandler(async (req, res, next) => {
       new AppError("Brand not found or you don't have permission", 404)
     );
 
-  const priceAfterDiscount = isPercentage
+  const priceAfterDiscount = isPercentage !== "false"
     ? price - price * (discount / 100)
     : price - discount;
 
@@ -84,6 +85,7 @@ const addProduct = asyncErrorHandler(async (req, res, next) => {
     brand,
     price,
     discount,
+    isPercentage,
     priceAfterDiscount,
     stock,
   });
@@ -92,11 +94,11 @@ const addProduct = asyncErrorHandler(async (req, res, next) => {
   res.status(201).json({ message: "success", product });
 });
 
-// Get products
+// Get all products
 // ============================================
 const getAllProducts = asyncErrorHandler(async (req, res, next) => {
   const products = await Product.find({});
-  if (products.length === 0)
+  if (!products.length)
     return next(new AppError("There are no products added yet", 404));
 
   res.status(200).json({ message: "success", products });
@@ -202,19 +204,21 @@ const deleteProduct = asyncErrorHandler(async (req, res, next) => {
   const { userId } = req.user;
   const { productId } = req.params;
 
-  const product = await product.findOneAndDelete({
+  const product = await Product.findOneAndDelete({
     _id: productId,
     addedBy: userId,
-  });
+  }).populate("category", "folderId").populate("subCategory", "folderId");
   if (!product)
     return next(
-      new AppError("product not found or you don't have permission", 404)
+      new AppError("Product not found or you don't have permission", 404)
     );
 
   await cloudinary.api.delete_resources_by_prefix(
-    `E-commerce/products/${product.folderId}`
+    `E-commerce/Categories/${product.category.folderId}/SubCategories/${product.subCategory.folderId}/Products/${product.folderId}`
   );
-  await cloudinary.api.delete_folder(`E-commerce/products/${product.folderId}`);
+  await cloudinary.api.delete_folder(`E-commerce/Categories/${product.category.folderId}/SubCategories/${product.subCategory.folderId}/Products/${product.folderId}`);
+
+  await Review.deleteMany({ productId: product._id });
 
   res.status(200).json({ message: "success", product });
 });
