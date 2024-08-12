@@ -3,7 +3,6 @@ import Order from "../../../database/models/order.model.js";
 import Product from "../../../database/models/product.model.js";
 import Coupon from "../../../database/models/coupon.model.js";
 import Cart from "../../../database/models/cart.model.js";
-import { request } from "express";
 
 // Create order
 // ============================================

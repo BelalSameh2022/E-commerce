@@ -82,11 +82,15 @@ const productSchema = new Schema(
       required: true,
       min: 0,
     },
-    rateAverage: {
+    rateAvg: {
       type: Number,
       default: 0,
       min: 0,
       max: 5,
+    },
+    rateNum: {
+      type: Number,
+      default: 0,
     },
   },
   {

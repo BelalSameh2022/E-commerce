@@ -6,8 +6,11 @@ import upload from "../../middlewares/upload.middleware.js";
 import { auth } from "../../middlewares/auth.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 import { checkIfProduct } from "../../middlewares/checkIfExists.middleware.js";
+import reviewRouter from "../review/review.routes.js";
 
 const productRouter = Router();
+
+productRouter.use("/:productId/reviews", reviewRouter);
 
 productRouter
   .route("/")
