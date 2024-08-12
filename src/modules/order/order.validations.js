@@ -1,35 +1,32 @@
 import joi from "joi";
 import { generalFiled } from "../../utils/generalFields.js";
 
-const addCouponSchema = {
+const createOrderSchema = {
   body: joi
     .object({
-      code: generalFiled.name.required(),
-      amount: joi.number().integer().positive().min(1).required(),
-      isPercentage: joi.boolean(),
-      from: joi.date().greater(Date.now()).required(),
-      to: joi.date().greater(joi.ref("from")).required(),
+      productId: generalFiled.id,
+      quantity: joi.number().integer().positive(),
+      couponCode: generalFiled.name,
+      address: joi.string().required(),
+      phoneNumber: generalFiled.phoneNumber.required(),
+      paymentMethod: joi.string().valid("cash", "card").required(),
     })
     .required(),
   headers: generalFiled.headers.required(),
 };
 
-const updateCouponSchema = {
+const cancelOrderSchema = {
   body: joi
     .object({
-      code: generalFiled.name,
-      amount: joi.number().integer().positive().min(1),
-      isPercentage: joi.boolean(),
-      from: joi.date().greater(Date.now()),
-      to: joi.date().greater(joi.ref("from")),
+      reason: joi.string(),
     })
     .required(),
   params: joi
     .object({
-      couponId: generalFiled.id.required(),
+      orderId: generalFiled.id.required(),
     })
     .required(),
   headers: generalFiled.headers.required(),
 };
 
-export { addCouponSchema, updateCouponSchema };
+export { createOrderSchema, cancelOrderSchema };

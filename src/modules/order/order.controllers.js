@@ -1,84 +1,159 @@
-import slugify from "slugify";
 import { AppError, asyncErrorHandler } from "../../utils/error.js";
+import Order from "../../../database/models/order.model.js";
+import Product from "../../../database/models/product.model.js";
 import Coupon from "../../../database/models/coupon.model.js";
+import Cart from "../../../database/models/cart.model.js";
+import { request } from "express";
 
-// Add coupon
+// Create order
 // ============================================
-const addCoupon = asyncErrorHandler(async (req, res, next) => {
+const createOrder = asyncErrorHandler(async (req, res, next) => {
   const { userId } = req.user;
-  const { code, amount, isPercentage = true, from, to } = req.body;
+  const {
+    productId,
+    quantity,
+    couponCode,
+    address,
+    phoneNumber,
+    paymentMethod,
+  } = req.body;
 
-  const coupon = await Coupon.create({
-    code,
-    amount,
-    isPercentage,
-    from,
-    to,
-    addedBy: userId,
+  if (couponCode) {
+    const coupon = await Coupon.findOne({
+      code: couponCode.toLowerCase(),
+      to: { $gte: Date.now() },
+      usedBy: { $nin: [userId] },
+    });
+    if (!coupon)
+      return next(
+        new AppError("Coupon not found or expired or already used", 404)
+      );
+    req.body.coupon = coupon;
+  }
+
+  let items_ = [];
+  let flag = false;
+  if (productId) {
+    items_ = [{ productId, quantity }];
+  } else {
+    const cart = await Cart.findOne({ user: userId });
+    if (!cart.products.length) return next(new AppError("Cart is empty", 404));
+    items_ = cart.products;
+    flag = true;
+  }
+
+  const items = [];
+  let total = 0;
+  for (let item of items_) {
+    const product = await Product.findOne({
+      _id: item.productId,
+      stock: { $gte: item.quantity },
+    });
+    if (!product)
+      return next(new AppError("Product not found or out of stock", 404));
+
+    if (flag) item = item.toObject();
+    item.name = product.name;
+    item.price = product.price;
+    item.finalPrice = product.priceAfterDiscount;
+    total += item.finalPrice * item.quantity;
+
+    items.push(item);
+  }
+
+  const finalTotal = req.body.coupon?.isPercentage
+    ? total - total * ((req.body.coupon?.amount || 0) / 100)
+    : total - (req.body.coupon?.amount || 0);
+
+  const order = await Order.create({
+    user: userId,
+    items,
+    total,
+    couponId: req.body.coupon?._id,
+    finalTotal,
+    address,
+    phoneNumber,
+    paymentMethod,
+    status: paymentMethod === "card" ? "waitPayment" : "placed",
   });
-  if (!coupon) return next(new AppError("Coupon addition failed", 400));
+  if (!order) return next(new AppError("Order creation failed", 400));
 
-  res.status(201).json({ message: "success", coupon });
+  if (req.body.coupon) {
+    await Coupon.updateOne(
+      { _id: req.body.coupon._id },
+      { $push: { usedBy: userId } }
+    );
+  }
+
+  for (const item of items) {
+    await Product.updateOne(
+      { _id: item.productId },
+      { $inc: { stock: -item.quantity } }
+    );
+  }
+
+  if (flag) {
+    await Cart.updateOne({ user: userId }, { $set: { products: [] } });
+  }
+
+  res.status(201).json({ message: "success", order });
 });
 
-// Get coupons
+// Get all orders
 // ============================================
-const getAllCoupons = asyncErrorHandler(async (req, res, next) => {
-  const coupons = await Coupon.find({});
-  if (coupons.length === 0)
-    return next(new AppError("There are no coupons added yet", 404));
-
-  res.status(200).json({ message: "success", coupons });
-});
-
-// Get coupon
-// ============================================
-const getCoupon = asyncErrorHandler(async (req, res, next) => {
-  const { couponId } = req.params;
-
-  const coupon = await Coupon.findById(couponId);
-  if (!coupon) return next(new AppError("Coupon not found", 404));
-
-  res.status(200).json({ message: "success", coupon });
-});
-
-// Update coupon
-// ============================================
-const updateCoupon = asyncErrorHandler(async (req, res, next) => {
+const getAllOrders = asyncErrorHandler(async (req, res, next) => {
   const { userId } = req.user;
-  const { couponId } = req.params;
 
-  if (!req.body) return next(new AppError("There is no data to update", 400));
+  const orders = await Order.find({ user: userId });
+  if (!orders.length)
+    return next(new AppError("There are no orders created yet", 404));
 
-  const coupon = await Coupon.findOneAndUpdate(
-    { _id: couponId, addedBy: userId },
-    req.body,
-    { new: true }
+  res.status(200).json({ message: "success", orders });
+});
+
+// Cancel order
+// ============================================
+const cancelOrder = asyncErrorHandler(async (req, res, next) => {
+  const { userId } = req.user;
+  const { orderId } = req.params;
+  const { reason } = req.body;
+
+  const order = await Order.findOne({ _id: orderId, user: userId });
+  if (!order)
+    return next(
+      new AppError("Order not found or you don't have permission", 404)
+    );
+
+  if (order.status === "cancelled")
+    return next(new AppError("Order already cancelled", 400));
+
+  if (
+    (order.paymentMethod === "cash" && order.status !== "placed") ||
+    (order.paymentMethod === "card" && order.status !== "waitPayment")
+  ) {
+    return next(new AppError("You can't cancel this order", 400));
+  }
+
+  await Order.updateOne(
+    { _id: orderId },
+    { $set: { status: "cancelled", cancelledBy: userId, reason } }
   );
-  if (!coupon)
-    return next(
-      new AppError("Coupon not found or you don't have permission", 404)
-    );
 
-  res.status(200).json({ message: "success", coupon });
+  if (order.couponId) {
+    await Coupon.updateOne(
+      { _id: order.couponId },
+      { $pull: { usedBy: userId } }
+    );
+  }
+
+  for (const item of order.items) {
+    await Product.updateOne(
+      { _id: item.productId },
+      { $inc: { stock: item.quantity } }
+    );
+  }
+
+  res.status(200).json({ message: "success", order });
 });
 
-// Delete coupon
-// ============================================
-const deleteCoupon = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
-  const { couponId } = req.params;
-
-  const coupon = await Coupon.findOneAndDelete({
-    _id: couponId,
-    addedBy: userId,
-  });
-  if (!coupon)
-    return next(
-      new AppError("Coupon not found or you don't have permission", 404)
-    );
-
-  res.status(200).json({ message: "success", coupon });
-});
-
-export { addCoupon, getAllCoupons, getCoupon, updateCoupon, deleteCoupon };
+export { createOrder, getAllOrders, cancelOrder };

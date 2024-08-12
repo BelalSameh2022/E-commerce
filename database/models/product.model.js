@@ -70,6 +70,10 @@ const productSchema = new Schema(
       min: 0,
       max: 100,
     },
+    isPercentage: {
+      type: Boolean,
+      default: true,
+    },
     priceAfterDiscount: {
       type: Number,
     },

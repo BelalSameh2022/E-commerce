@@ -19,6 +19,7 @@ const addProduct = asyncErrorHandler(async (req, res, next) => {
     brand,
     price,
     discount = 0,
+    isPercentage = true,
     stock,
   } = req.body;
 
@@ -28,7 +29,11 @@ const addProduct = asyncErrorHandler(async (req, res, next) => {
       new AppError("Category not found or you don't have permission", 404)
     );
 
-  const subCategory_ = await SubCategory.findOne({ _id: subCategory, category, addedBy: userId });
+  const subCategory_ = await SubCategory.findOne({
+    _id: subCategory,
+    category,
+    addedBy: userId,
+  });
   if (!subCategory_)
     return next(
       new AppError("SubCategory not found or you don't have permission", 404)
@@ -40,21 +45,28 @@ const addProduct = asyncErrorHandler(async (req, res, next) => {
       new AppError("Brand not found or you don't have permission", 404)
     );
 
-  const priceAfterDiscount = price - price * (discount / 100);
+  const priceAfterDiscount = isPercentage
+    ? price - price * (discount / 100)
+    : price - discount;
 
   const folderId = nanoid(5);
   const associatedImages = [];
   for (const file of req.files.associatedImages) {
-    const { secure_url, public_id } = await cloudinary.uploader.upload(file.path, {
-      folder: `E-commerce/Categories/${category_.folderId}/SubCategories/${subCategory_.folderId}/Products/${folderId}/AssociatedImages`,
-    });
+    const { secure_url, public_id } = await cloudinary.uploader.upload(
+      file.path,
+      {
+        folder: `E-commerce/Categories/${category_.folderId}/SubCategories/${subCategory_.folderId}/Products/${folderId}/AssociatedImages`,
+      }
+    );
     associatedImages.push({ secure_url, public_id });
   }
 
-  const { secure_url, public_id } = await cloudinary.uploader.upload(req.files.image[0].path, {
-    folder: `E-commerce/Categories/${category_.folderId}/SubCategories/${subCategory_.folderId}/Products/${folderId}`,
-  });
-
+  const { secure_url, public_id } = await cloudinary.uploader.upload(
+    req.files.image[0].path,
+    {
+      folder: `E-commerce/Categories/${category_.folderId}/SubCategories/${subCategory_.folderId}/Products/${folderId}`,
+    }
+  );
 
   const product = await Product.create({
     name,
@@ -117,7 +129,8 @@ const updateProduct = asyncErrorHandler(async (req, res, next) => {
     stock,
   } = req.body;
 
-  if (!req.body && !req.files) return next(new AppError("Nothing to update", 400));
+  if (!req.body && !req.files)
+    return next(new AppError("Nothing to update", 400));
 
   const category_ = await Category.findOne({ _id: category, addedBy: userId });
   if (!category_)
@@ -125,7 +138,11 @@ const updateProduct = asyncErrorHandler(async (req, res, next) => {
       new AppError("Category not found or you don't have permission", 404)
     );
 
-  const subCategory_ = await SubCategory.findOne({ _id: subCategory, category, addedBy: userId });
+  const subCategory_ = await SubCategory.findOne({
+    _id: subCategory,
+    category,
+    addedBy: userId,
+  });
   if (!subCategory_)
     return next(
       new AppError("SubCategory not found or you don't have permission", 404)
@@ -139,7 +156,7 @@ const updateProduct = asyncErrorHandler(async (req, res, next) => {
 
   // const priceAfterDiscount = price - price * (discount / 100);
 
-  console.log(req.files)
+  console.log(req.files);
 
   // const product = await Product.findOne({ _id: productId, addedBy: userId });
   // if (!product)
