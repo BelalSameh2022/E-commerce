@@ -9,10 +9,10 @@ const addProductSchema = {
       category: generalFiled.id.required(),
       subCategory: generalFiled.id.required(),
       brand: generalFiled.id.required(),
-      price: joi.number().positive().min(1).required(),
+      price: joi.number().positive().required(),
       discount: joi.number().integer().min(1).max(100),
-      isPercentage: joi.boolean(),
-      stock: joi.number().integer().min(1).required(),
+      isPercentage: joi.boolean().required(),
+      stock: joi.number().integer().positive().required(),
     })
     .required(),
   files: joi.object({ 
@@ -27,13 +27,10 @@ const updateProductSchema = {
     .object({
       name: generalFiled.name,
       description: joi.string(),
-      category: generalFiled.id,
-      subCategory: generalFiled.id,
-      brand: generalFiled.id,
-      price: joi.number().positive().min(1),
+      price: joi.number().positive(),
       discount: joi.number().integer().min(1).max(100),
       isPercentage: joi.boolean(),
-      stock: joi.number().integer().min(1),
+      stock: joi.number().integer().positive(),
     })
     .required(),
   files: joi.object({ 
