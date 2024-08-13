@@ -78,7 +78,7 @@ const clearCart = asyncErrorHandler(async (req, res, next) => {
     { products: [] },
     { new: true }
   );
-  if (!cart || cart.products.length === 0) return next(new AppError("Cart not found or already cleared", 404));
+  if (!cart) return next(new AppError("Cart not found", 404));
 
   res.status(200).json({ message: "success", cart });
 });
