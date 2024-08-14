@@ -70,6 +70,7 @@ const addProduct = asyncErrorHandler(async (req, res, next) => {
       folder: `E-commerce/Categories/${category_.folderId}/SubCategories/${subCategory_.folderId}/Products/${folderId}`,
     }
   );
+  req.filePath = `E-commerce/Categories/${category_.folderId}/SubCategories/${subCategory_.folderId}/Products/${folderId}`;
 
   const product = await Product.create({
     name,
@@ -92,6 +93,10 @@ const addProduct = asyncErrorHandler(async (req, res, next) => {
     stock,
   });
   if (!product) return next(new AppError("Product addition failed", 400));
+  req.document = {
+    model: Product,
+    id: product._id,
+  }
 
   res.status(201).json({ message: "success", product });
 });
@@ -108,7 +113,9 @@ const getAllProducts = asyncErrorHandler(async (req, res, next) => {
 
   const products = await getFeatures.mongooseQuery;
 
-  res.status(200).json({ message: "success", page: getFeatures.page, products });
+  res
+    .status(200)
+    .json({ message: "success", page: getFeatures.page, products });
 });
 
 // Get product

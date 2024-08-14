@@ -17,6 +17,7 @@ const addBrand = asyncErrorHandler(async (req, res, next) => {
       folder: `E-commerce/Brands/${folderId}`,
     }
   );
+  req.filePath = `E-commerce/Brands/${folderId}`;
 
   const brand = await Brand.create({
     name,
@@ -29,6 +30,10 @@ const addBrand = asyncErrorHandler(async (req, res, next) => {
     addedBy: userId,
   });
   if (!brand) return next(new AppError("brand addition failed", 400));
+  req.document = {
+    model: Brand,
+    id: brand._id,
+  }
 
   res.status(201).json({ message: "success", brand });
 });

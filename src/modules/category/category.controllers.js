@@ -17,6 +17,7 @@ const addCategory = asyncErrorHandler(async (req, res, next) => {
       folder: `E-commerce/Categories/${folderId}`,
     }
   );
+  req.filePath = `E-commerce/Categories/${folderId}`;
 
   const category = await Category.create({
     name,
@@ -29,6 +30,10 @@ const addCategory = asyncErrorHandler(async (req, res, next) => {
     addedBy: req.user.userId,
   });
   if (!category) return next(new AppError("Category addition failed", 400));
+  req.document = {
+    model: Category,
+    id: category._id,
+  }
 
   res.status(201).json({ message: "success", category });
 });

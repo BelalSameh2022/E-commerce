@@ -25,6 +25,7 @@ const addSubCategory = asyncErrorHandler(async (req, res, next) => {
       folder: `E-commerce/Categories/${category.folderId}/SubCategories/${folderId}`,
     }
   );
+  req.filePath = `E-commerce/Categories/${category.folderId}/SubCategories/${folderId}`;
 
   const subCategory = await SubCategory.create({
     name,
@@ -39,6 +40,10 @@ const addSubCategory = asyncErrorHandler(async (req, res, next) => {
   });
   if (!subCategory)
     return next(new AppError("SubCategory addition failed", 400));
+  req.document = {
+    model: SubCategory,
+    id: subCategory._id,
+  }
 
   res.status(201).json({ message: "success", subCategory });
 });

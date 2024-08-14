@@ -37,6 +37,10 @@ const signUp = asyncErrorHandler(async (req, res, next) => {
     addresses,
     role
   });
+  req.document = {
+    model: User,
+    id: user._id,
+  }
 
   if (!user) return next(new AppError("User not created", 400));
   res.status(201).json({ message: "success", user });
