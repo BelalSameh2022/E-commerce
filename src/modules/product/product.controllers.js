@@ -7,6 +7,7 @@ import SubCategory from "../../../database/models/subCategory.model.js";
 import Brand from "../../../database/models/brand.model.js";
 import Product from "../../../database/models/product.model.js";
 import Review from "../../../database/models/review.model.js";
+import GetFeatures from "../../utils/getFeatures.js";
 
 // Add product
 // ============================================
@@ -98,11 +99,16 @@ const addProduct = asyncErrorHandler(async (req, res, next) => {
 // Get all products
 // ============================================
 const getAllProducts = asyncErrorHandler(async (req, res, next) => {
-  const products = await Product.find({});
-  if (!products.length)
-    return next(new AppError("There are no products added yet", 404));
+  const getFeatures = new GetFeatures(Product.find({}), req.query)
+    .paginate()
+    .filter()
+    .sort()
+    .select()
+    .search();
 
-  res.status(200).json({ message: "success", products });
+  const products = await getFeatures.mongooseQuery;
+
+  res.status(200).json({ message: "success", page: getFeatures.page, products });
 });
 
 // Get product
@@ -142,6 +148,10 @@ const updateProduct = asyncErrorHandler(async (req, res, next) => {
         400
       )
     );
+  }
+
+  if (isPercentage === "true" && discount > 100) {
+    return next(new AppError("Discount can't be more than 100", 400));
   }
 
   if (name) {
@@ -201,8 +211,10 @@ const updateProduct = asyncErrorHandler(async (req, res, next) => {
       product.image = { secure_url, public_id };
     }
     if (req.files.associatedImages?.length) {
-      await cloudinary.api.delete_resources_by_prefix(`E-commerce/Categories/${product.category.folderId}/SubCategories/${product.subCategory.folderId}/Products/${product.folderId}/AssociatedImages`);
-      
+      await cloudinary.api.delete_resources_by_prefix(
+        `E-commerce/Categories/${product.category.folderId}/SubCategories/${product.subCategory.folderId}/Products/${product.folderId}/AssociatedImages`
+      );
+
       const associatedImages = [];
       for (const file of req.files.associatedImages) {
         const { secure_url, public_id } = await cloudinary.uploader.upload(
