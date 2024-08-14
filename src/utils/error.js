@@ -17,7 +17,7 @@ const invalidUrlHandler = (req, res, next) => {
 
 const globalErrorHandler = (err, req, res, next) => {
   const { message, statusCode } = err;
-  res.status(statusCode || 500).json({ message, error: true });
+  res.status(statusCode || 500).json({ message, stack: err.stack });
   next();
 };
 

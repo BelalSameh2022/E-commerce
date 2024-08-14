@@ -1,8 +1,11 @@
-import { AppError, asyncErrorHandler } from "../../utils/error.js";
-import Order from "../../../database/models/order.model.js";
 import Product from "../../../database/models/product.model.js";
-import Coupon from "../../../database/models/coupon.model.js";
 import Cart from "../../../database/models/cart.model.js";
+import Coupon from "../../../database/models/coupon.model.js";
+import Order from "../../../database/models/order.model.js";
+import { AppError, asyncErrorHandler } from "../../utils/error.js";
+import { createInvoice } from "../../services/createInvoice.js";
+import { capitalize } from "../../utils/capitalize.js";
+import { sendEmail } from "../../services/email.js";
 
 // Create order
 // ============================================
@@ -27,7 +30,7 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
       return next(
         new AppError("Coupon not found or expired or already used", 404)
       );
-    req.body.coupon = coupon;
+    req.coupon = coupon;
   }
 
   let items_ = [];
@@ -60,15 +63,15 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
     items.push(item);
   }
 
-  const finalTotal = req.body.coupon?.isPercentage
-    ? total - total * ((req.body.coupon?.amount || 0) / 100)
-    : total - (req.body.coupon?.amount || 0);
+  const finalTotal = req.coupon?.isPercentage
+    ? total - total * ((req.coupon?.amount || 0) / 100)
+    : total - (req.coupon?.amount || 0);
 
   const order = await Order.create({
     user: userId,
     items,
     total,
-    couponId: req.body.coupon?._id,
+    couponId: req.coupon?._id,
     finalTotal,
     address,
     phoneNumber,
@@ -77,9 +80,9 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
   });
   if (!order) return next(new AppError("Order creation failed", 400));
 
-  if (req.body.coupon) {
+  if (req.coupon) {
     await Coupon.updateOne(
-      { _id: req.body.coupon._id },
+      { _id: req.coupon._id },
       { $push: { usedBy: userId } }
     );
   }
@@ -95,6 +98,35 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
     await Cart.updateOne({ user: userId }, { $set: { products: [] } });
   }
 
+  const invoice = {
+    shipping: {
+      name: capitalize(req.user.name),
+      address: "Abbas Street",
+      city: "Nasr City",
+      state: "Cairo",
+      country: "Egypt",
+      postal_code: 4450113,
+    },
+    items: order.items,
+    total: order.total,
+    finalTotal: order.finalTotal,
+    couponCode: req.coupon?.code || "___",
+    couponAmount:
+      (req.coupon?.isPercentage
+        ? req.coupon?.amount + "%"
+        : "E£" + (req.coupon?.amount)?.toFixed(2)) || "E£0.00",
+    invoice_nr: order._id,
+    date: order.createdAt,
+  };
+
+  await createInvoice(invoice, "invoice.pdf");
+  await sendEmail(
+    req.user.email,
+    "Order Placed",
+    `Your order has been placed successfully.`,
+    [{ path: "invoice.pdf", contentType: "application/pdf" }]
+  );
+
   res.status(201).json({ message: "success", order });
 });
 
@@ -108,6 +140,17 @@ const getAllOrders = asyncErrorHandler(async (req, res, next) => {
     return next(new AppError("There are no orders created yet", 404));
 
   res.status(200).json({ message: "success", orders });
+});
+
+// Get the latest order
+// ============================================
+const getLatestOrder = asyncErrorHandler(async (req, res, next) => {
+  const { userId } = req.user;
+
+  const order = await Order.findOne({ user: userId }).sort("-createdAt");
+  if (!order) return next(new AppError("Order not found", 404));
+
+  res.status(200).json({ message: "success", order });
 });
 
 // Cancel order
@@ -135,7 +178,8 @@ const cancelOrder = asyncErrorHandler(async (req, res, next) => {
 
   await Order.updateOne(
     { _id: orderId },
-    { $set: { status: "cancelled", cancelledBy: userId, reason } }
+    { $set: { status: "cancelled", cancelledBy: userId, reason } },
+    { new: true }
   );
 
   if (order.couponId) {
@@ -155,4 +199,4 @@ const cancelOrder = asyncErrorHandler(async (req, res, next) => {
   res.status(200).json({ message: "success", order });
 });
 
-export { createOrder, getAllOrders, cancelOrder };
+export { createOrder, getAllOrders, getLatestOrder, cancelOrder };

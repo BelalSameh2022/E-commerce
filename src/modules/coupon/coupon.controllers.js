@@ -1,4 +1,3 @@
-import slugify from "slugify";
 import { AppError, asyncErrorHandler } from "../../utils/error.js";
 import Coupon from "../../../database/models/coupon.model.js";
 
@@ -6,7 +5,7 @@ import Coupon from "../../../database/models/coupon.model.js";
 // ============================================
 const addCoupon = asyncErrorHandler(async (req, res, next) => {
   const { userId } = req.user;
-  const { code, amount, isPercentage = true, from, to } = req.body;
+  const { code, amount, isPercentage, from, to } = req.body;
 
   const coupon = await Coupon.create({
     code,
@@ -48,7 +47,7 @@ const updateCoupon = asyncErrorHandler(async (req, res, next) => {
   const { userId } = req.user;
   const { couponId } = req.params;
 
-  if (!req.body) return next(new AppError("There is no data to update", 400));
+  if (!req.body) return next(new AppError("Nothing to update", 400));
 
   const coupon = await Coupon.findOneAndUpdate(
     { _id: couponId, addedBy: userId },

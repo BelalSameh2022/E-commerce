@@ -5,8 +5,8 @@ const addCouponSchema = {
   body: joi
     .object({
       code: generalFiled.name.required(),
-      amount: joi.number().integer().positive().min(1).required(),
-      isPercentage: joi.boolean(),
+      amount: joi.number().integer().positive().required(),
+      isPercentage: joi.boolean().required(),
       from: joi.date().greater(Date.now()).required(),
       to: joi.date().greater(joi.ref("from")).required(),
     })
@@ -18,7 +18,7 @@ const updateCouponSchema = {
   body: joi
     .object({
       code: generalFiled.name,
-      amount: joi.number().integer().positive().min(1),
+      amount: joi.number().integer().positive(),
       isPercentage: joi.boolean(),
       from: joi.date().greater(Date.now()),
       to: joi.date().greater(joi.ref("from")),

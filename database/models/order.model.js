@@ -21,6 +21,7 @@ const orderSchema = new Schema(
     couponId: {
       type: Types.ObjectId,
       ref: "Coupon",
+      default: null,
     },
     finalTotal: {
       type: Number,

@@ -16,14 +16,13 @@ orderRouter
   )
   .get(auth(Object.values(role)), OC.getAllOrders);
 
-orderRouter
-  .route("/:orderId")
-  // .get(auth(Object.values(role)), OC.getorder)
-  .put(
-    validate(OV.cancelOrderSchema),
-    auth(Object.values(role)),
-    OC.cancelOrder
-  );
-//   .delete(auth(Object.values(role)), OC.deleteorder);
+orderRouter.get("/latest", auth(Object.values(role)), OC.getLatestOrder);
+
+orderRouter.put(
+  "/:orderId",
+  validate(OV.cancelOrderSchema),
+  auth(Object.values(role)),
+  OC.cancelOrder
+);
 
 export default orderRouter;

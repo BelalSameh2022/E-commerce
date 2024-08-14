@@ -9,7 +9,15 @@ import User from "../../../database/models/user.model.js";
 // Sign up
 // ============================================
 const signUp = asyncErrorHandler(async (req, res, next) => {
-  const { name, email, password, age, phoneNumbers, addresses, role = "User" } = req.body;
+  const {
+    name,
+    email,
+    password,
+    age,
+    phoneNumbers,
+    addresses,
+    role = "User",
+  } = req.body;
 
   const token = jwt.sign(
     { email },
@@ -35,12 +43,12 @@ const signUp = asyncErrorHandler(async (req, res, next) => {
     age,
     phoneNumbers,
     addresses,
-    role
+    role,
   });
   req.document = {
     model: User,
     id: user._id,
-  }
+  };
 
   if (!user) return next(new AppError("User not created", 400));
   res.status(201).json({ message: "success", user });
@@ -114,7 +122,7 @@ const signIn = asyncErrorHandler(async (req, res, next) => {
     return next(new AppError("Invalid credentials or not confirmed yet", 401));
 
   const token = jwt.sign(
-    { userId: user._id, role: user.role },
+    { userId: user._id, name: user.name, email: user.email, role: user.role },
     process.env.SIGNIN_VERIFY_SIGNATURE,
     { expiresIn: "1d" }
   );
@@ -173,8 +181,6 @@ const resetPassword = asyncErrorHandler(async (req, res, next) => {
 
   res.status(200).json({ message: "success" });
 });
-
-
 
 export {
   signUp,
