@@ -8,11 +8,11 @@ import SubCategory from "../../../database/models/subCategory.model.js";
 // Add subCategory
 // ============================================
 const addSubCategory = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { categoryId } = req.params;
   const { name } = req.body;
 
-  const category = await Category.findOne({ _id: categoryId, addedBy: userId });
+  const category = await Category.findOne({ _id: categoryId, addedBy: id });
   if (!category)
     return next(
       new AppError("Category not found or you don't have permission", 404)
@@ -36,7 +36,7 @@ const addSubCategory = asyncErrorHandler(async (req, res, next) => {
     image: { secure_url, public_id },
     folderId,
     category: categoryId,
-    addedBy: userId,
+    addedBy: id,
   });
   if (!subCategory)
     return next(new AppError("SubCategory addition failed", 400));
@@ -86,7 +86,7 @@ const getSubCategory = asyncErrorHandler(async (req, res, next) => {
 // Update subCategory
 // ============================================
 const updateSubCategory = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { subCategoryId } = req.params;
   const { name } = req.body;
 
@@ -95,13 +95,13 @@ const updateSubCategory = asyncErrorHandler(async (req, res, next) => {
 
   const subCategory = await SubCategory.findOne({
     _id: subCategoryId,
-    addedBy: userId,
+    addedBy: id,
   });
   if (!subCategory) return next(new AppError("SubCategory not found or you don't have permission", 404));
 
   const category = await Category.findOne({
     _id: subCategory.category,
-    addedBy: userId,
+    addedBy: id,
   });
   if (!category) return next(new AppError("Category not found or you don't have permission", 404));
 
@@ -140,12 +140,12 @@ const updateSubCategory = asyncErrorHandler(async (req, res, next) => {
 // Delete subCategory
 // ============================================
 const deleteSubCategory = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { subCategoryId } = req.params;
 
   const subCategory = await SubCategory.findOneAndDelete({
     _id: subCategoryId,
-    addedBy: userId,
+    addedBy: id,
   });
   if (!subCategory)
     return next(
@@ -154,7 +154,7 @@ const deleteSubCategory = asyncErrorHandler(async (req, res, next) => {
 
   const category = await Category.findOne({
     _id: subCategory.category,
-    addedBy: userId,
+    addedBy: id,
   });
   if (!category)
     return next(

@@ -12,7 +12,7 @@ import GetFeatures from "../../utils/getFeatures.js";
 // Add product
 // ============================================
 const addProduct = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const {
     name,
     description = "",
@@ -25,7 +25,7 @@ const addProduct = asyncErrorHandler(async (req, res, next) => {
     stock,
   } = req.body;
 
-  const category_ = await Category.findOne({ _id: category, addedBy: userId });
+  const category_ = await Category.findOne({ _id: category, addedBy: id });
   if (!category_)
     return next(
       new AppError("Category not found or you don't have permission", 404)
@@ -34,14 +34,14 @@ const addProduct = asyncErrorHandler(async (req, res, next) => {
   const subCategory_ = await SubCategory.findOne({
     _id: subCategory,
     category,
-    addedBy: userId,
+    addedBy: id,
   });
   if (!subCategory_)
     return next(
       new AppError("SubCategory not found or you don't have permission", 404)
     );
 
-  const brand_ = await Brand.findOne({ _id: brand, addedBy: userId });
+  const brand_ = await Brand.findOne({ _id: brand, addedBy: id });
   if (!brand_)
     return next(
       new AppError("Brand not found or you don't have permission", 404)
@@ -82,7 +82,7 @@ const addProduct = asyncErrorHandler(async (req, res, next) => {
     image: { secure_url, public_id },
     associatedImages,
     folderId,
-    addedBy: userId,
+    addedBy: id,
     category,
     subCategory,
     brand,
@@ -132,7 +132,7 @@ const getProduct = asyncErrorHandler(async (req, res, next) => {
 // Update product
 // ============================================
 const updateProduct = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { productId } = req.params;
   const { name, description, price, discount, isPercentage, stock } = req.body;
 
@@ -140,7 +140,7 @@ const updateProduct = asyncErrorHandler(async (req, res, next) => {
     return next(new AppError("Nothing to update", 400));
   }
 
-  const product = await Product.findOne({ _id: productId, addedBy: userId })
+  const product = await Product.findOne({ _id: productId, addedBy: id })
     .populate("category", "folderId")
     .populate("subCategory", "folderId");
   if (!product)
@@ -244,12 +244,12 @@ const updateProduct = asyncErrorHandler(async (req, res, next) => {
 // Delete product
 // ============================================
 const deleteProduct = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { productId } = req.params;
 
   const product = await Product.findOneAndDelete({
     _id: productId,
-    addedBy: userId,
+    addedBy: id,
   })
     .populate("category", "folderId")
     .populate("subCategory", "folderId");

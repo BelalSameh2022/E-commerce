@@ -6,18 +6,18 @@ import Product from "../../../database/models/product.model.js";
 // Add review
 // ============================================
 const addReview = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { productId } = req.params;
   const { comment, rate } = req.body;
 
   const product = await Product.findById(productId);
   if (!product) return next(new AppError("Product not found", 404));
 
-  const review_ = await Review.findOne({ addedBy: userId, productId });
+  const review_ = await Review.findOne({ addedBy: id, productId });
   if (review_) return next(new AppError("You already reviewed this product", 400));
 
   const order = await Order.findOne({
-    user: userId,
+    user: id,
     status: "delivered",
     "items.productId": productId,
   });
@@ -30,7 +30,7 @@ const addReview = asyncErrorHandler(async (req, res, next) => {
     comment,
     rate,
     productId,
-    addedBy: userId,
+    addedBy: id,
   });
   if (!review) return next(new AppError("Review addition failed", 400));
 
@@ -72,11 +72,11 @@ const getReview = asyncErrorHandler(async (req, res, next) => {
 // Update review
 // ============================================
 const updateReview = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { reviewId } = req.params;
   const { comment, rate } = req.body;
 
-  const review = await Review.findOne({ _id: reviewId, addedBy: userId });
+  const review = await Review.findOne({ _id: reviewId, addedBy: id });
   if (!review)
     return next(
       new AppError("Review not found or you don't have permission", 404)
@@ -99,12 +99,12 @@ const updateReview = asyncErrorHandler(async (req, res, next) => {
 // Delete review
 // ============================================
 const deleteReview = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { reviewId } = req.params;
 
   const review = await Review.findOneAndDelete({
     _id: reviewId,
-    addedBy: userId,
+    addedBy: id,
   });
   if (!review)
     return next(

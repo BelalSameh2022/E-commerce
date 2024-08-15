@@ -10,7 +10,7 @@ import { sendEmail } from "../../services/email.js";
 // Create order
 // ============================================
 const createOrder = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const {
     productId,
     quantity,
@@ -24,7 +24,7 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
     const coupon = await Coupon.findOne({
       code: couponCode.toLowerCase(),
       to: { $gte: Date.now() },
-      usedBy: { $nin: [userId] },
+      usedBy: { $nin: [id] },
     });
     if (!coupon)
       return next(
@@ -38,7 +38,7 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
   if (productId) {
     items_ = [{ productId, quantity }];
   } else {
-    const cart = await Cart.findOne({ user: userId });
+    const cart = await Cart.findOne({ user: id });
     if (!cart.products.length) return next(new AppError("Cart is empty", 404));
     items_ = cart.products;
     flag = true;
@@ -68,7 +68,7 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
     : total - (req.coupon?.amount || 0);
 
   const order = await Order.create({
-    user: userId,
+    user: id,
     items,
     total,
     couponId: req.coupon?._id,
@@ -83,7 +83,7 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
   if (req.coupon) {
     await Coupon.updateOne(
       { _id: req.coupon._id },
-      { $push: { usedBy: userId } }
+      { $push: { usedBy: id } }
     );
   }
 
@@ -95,7 +95,7 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
   }
 
   if (flag) {
-    await Cart.updateOne({ user: userId }, { $set: { products: [] } });
+    await Cart.updateOne({ user: id }, { $set: { products: [] } });
   }
 
   const invoice = {
@@ -133,9 +133,9 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
 // Get all orders
 // ============================================
 const getAllOrders = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
 
-  const orders = await Order.find({ user: userId });
+  const orders = await Order.find({ user: id });
   if (!orders.length)
     return next(new AppError("There are no orders created yet", 404));
 
@@ -145,9 +145,9 @@ const getAllOrders = asyncErrorHandler(async (req, res, next) => {
 // Get the latest order
 // ============================================
 const getLatestOrder = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
 
-  const order = await Order.findOne({ user: userId }).sort("-createdAt");
+  const order = await Order.findOne({ user: id }).sort("-createdAt");
   if (!order) return next(new AppError("Order not found", 404));
 
   res.status(200).json({ message: "success", order });
@@ -156,11 +156,11 @@ const getLatestOrder = asyncErrorHandler(async (req, res, next) => {
 // Cancel order
 // ============================================
 const cancelOrder = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { orderId } = req.params;
   const { reason } = req.body;
 
-  const order = await Order.findOne({ _id: orderId, user: userId });
+  const order = await Order.findOne({ _id: orderId, user: id });
   if (!order)
     return next(
       new AppError("Order not found or you don't have permission", 404)
@@ -178,14 +178,14 @@ const cancelOrder = asyncErrorHandler(async (req, res, next) => {
 
   await Order.updateOne(
     { _id: orderId },
-    { $set: { status: "cancelled", cancelledBy: userId, reason } },
+    { $set: { status: "cancelled", cancelledBy: id, reason } },
     { new: true }
   );
 
   if (order.couponId) {
     await Coupon.updateOne(
       { _id: order.couponId },
-      { $pull: { usedBy: userId } }
+      { $pull: { usedBy: id } }
     );
   }
 

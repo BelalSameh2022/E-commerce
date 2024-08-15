@@ -4,7 +4,7 @@ import Coupon from "../../../database/models/coupon.model.js";
 // Add coupon
 // ============================================
 const addCoupon = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { code, amount, isPercentage, from, to } = req.body;
 
   const coupon = await Coupon.create({
@@ -13,7 +13,7 @@ const addCoupon = asyncErrorHandler(async (req, res, next) => {
     isPercentage,
     from,
     to,
-    addedBy: userId,
+    addedBy: id,
   });
   if (!coupon) return next(new AppError("Coupon addition failed", 400));
 
@@ -44,13 +44,13 @@ const getCoupon = asyncErrorHandler(async (req, res, next) => {
 // Update coupon
 // ============================================
 const updateCoupon = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { couponId } = req.params;
 
   if (!req.body) return next(new AppError("Nothing to update", 400));
 
   const coupon = await Coupon.findOneAndUpdate(
-    { _id: couponId, addedBy: userId },
+    { _id: couponId, addedBy: id },
     req.body,
     { new: true }
   );
@@ -65,12 +65,12 @@ const updateCoupon = asyncErrorHandler(async (req, res, next) => {
 // Delete coupon
 // ============================================
 const deleteCoupon = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { couponId } = req.params;
 
   const coupon = await Coupon.findOneAndDelete({
     _id: couponId,
-    addedBy: userId,
+    addedBy: id,
   });
   if (!coupon)
     return next(

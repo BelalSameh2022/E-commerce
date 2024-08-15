@@ -5,7 +5,7 @@ import { AppError, asyncErrorHandler } from "../../utils/error.js";
 // Add to cart
 // ============================================
 const addToCart = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { productId, quantity } = req.body;
 
   const product = await Product.findOne({
@@ -15,10 +15,10 @@ const addToCart = asyncErrorHandler(async (req, res, next) => {
   if (!product)
     return next(new AppError("Product not found or out of stock", 404));
 
-  const cart = await Cart.findOne({ user: userId });
+  const cart = await Cart.findOne({ user: id });
   if (!cart) {
     const newCart = await Cart.create({
-      user: userId,
+      user: id,
       products: [{ productId, quantity }],
     });
     return res.status(201).json({ message: "success", newCart });
@@ -41,9 +41,9 @@ const addToCart = asyncErrorHandler(async (req, res, next) => {
 // Get cart
 // ============================================
 const getCart = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
 
-  const cart = await Cart.findOne({ user: userId });
+  const cart = await Cart.findOne({ user: id });
   if (!cart) return next(new AppError("Cart not found", 404));
 
   res.status(200).json({ message: "success", cart });
@@ -52,11 +52,11 @@ const getCart = asyncErrorHandler(async (req, res, next) => {
 // Remove from cart
 // ============================================
 const removeFromCart = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { productId } = req.body;
 
   const cart = await Cart.findOneAndUpdate(
-    { user: userId, "products.productId": productId },
+    { user: id, "products.productId": productId },
     { $pull: { products: { productId } } },
     { new: true }
   );
@@ -71,10 +71,10 @@ const removeFromCart = asyncErrorHandler(async (req, res, next) => {
 // Clear cart
 // ============================================
 const clearCart = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
 
   const cart = await Cart.findOneAndUpdate(
-    { user: userId },
+    { user: id },
     { products: [] },
     { new: true }
   );

@@ -7,7 +7,7 @@ import Brand from "../../../database/models/brand.model.js";
 // Add brand
 // ============================================
 const addBrand = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { name } = req.body;
 
   const folderId = nanoid(5);
@@ -27,7 +27,7 @@ const addBrand = asyncErrorHandler(async (req, res, next) => {
     }),
     logo: { secure_url, public_id },
     folderId,
-    addedBy: userId,
+    addedBy: id,
   });
   if (!brand) return next(new AppError("brand addition failed", 400));
   req.document = {
@@ -62,13 +62,13 @@ const getBrand = asyncErrorHandler(async (req, res, next) => {
 // Update brand
 // ============================================
 const updateBrand = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { brandId } = req.params;
   const { name } = req.body;
 
   if (!name && !req.file) return next(new AppError("Nothing to update", 400));
 
-  const brand = await Brand.findOne({ _id: brandId, addedBy: userId });
+  const brand = await Brand.findOne({ _id: brandId, addedBy: id });
   if (!brand)
     return next(
       new AppError("Brand not found or you don't have permission", 404)
@@ -109,10 +109,10 @@ const updateBrand = asyncErrorHandler(async (req, res, next) => {
 // Delete brand
 // ============================================
 const deleteBrand = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { brandId } = req.params;
 
-  const brand = await Brand.findOneAndDelete({ _id: brandId, addedBy: userId });
+  const brand = await Brand.findOneAndDelete({ _id: brandId, addedBy: id });
   if (!brand)
     return next(
       new AppError("Brand not found or you don't have permission", 404)

@@ -27,7 +27,7 @@ const addCategory = asyncErrorHandler(async (req, res, next) => {
     }),
     image: { secure_url, public_id },
     folderId,
-    addedBy: req.user.userId,
+    addedBy: req.user.id,
   });
   if (!category) return next(new AppError("Category addition failed", 400));
   req.document = {
@@ -65,7 +65,7 @@ const getCategory = asyncErrorHandler(async (req, res, next) => {
 // Update category
 // ============================================
 const updateCategory = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { categoryId } = req.params;
   const { name } = req.body;
 
@@ -74,7 +74,7 @@ const updateCategory = asyncErrorHandler(async (req, res, next) => {
 
   const category = await Category.findOne({
     _id: categoryId,
-    addedBy: userId,
+    addedBy: id,
   });
   if (!category)
     return next(
@@ -116,12 +116,12 @@ const updateCategory = asyncErrorHandler(async (req, res, next) => {
 // Delete category
 // ============================================
 const deleteCategory = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { categoryId } = req.params;
 
   const category = await Category.findOneAndDelete({
     _id: categoryId,
-    addedBy: userId,
+    addedBy: id,
   });
   if (!category)
     return next(

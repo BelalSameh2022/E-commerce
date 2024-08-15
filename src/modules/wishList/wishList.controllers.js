@@ -5,17 +5,17 @@ import { AppError, asyncErrorHandler } from "../../utils/error.js";
 // Add to wishList
 // ============================================
 const addToWishList = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { productId } = req.body;
 
   const product = await Product.findOne({ _id: productId });
   if (!product)
     return next(new AppError("Product not found", 404));
 
-  const wishList = await WishList.findOne({ user: userId });
+  const wishList = await WishList.findOne({ user: id });
   if (!wishList) {
     const newWishList = await WishList.create({
-      user: userId,
+      user: id,
       products: [{ productId }],
     });
     return res.status(201).json({ message: "success", newWishList });
@@ -36,9 +36,9 @@ const addToWishList = asyncErrorHandler(async (req, res, next) => {
 // Get wishList
 // ============================================
 const getWishList = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
 
-  const wishList = await WishList.findOne({ user: userId });
+  const wishList = await WishList.findOne({ user: id });
   if (!wishList) return next(new AppError("WishList not found", 404));
 
   res.status(200).json({ message: "success", wishList });
@@ -47,11 +47,11 @@ const getWishList = asyncErrorHandler(async (req, res, next) => {
 // Remove from wishList
 // ============================================
 const removeFromWishList = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
   const { productId } = req.body;
 
   const wishList = await WishList.findOneAndUpdate(
-    { user: userId, "products.productId": productId },
+    { user: id, "products.productId": productId },
     { $pull: { products: { productId } } },
     { new: true }
   );
@@ -66,10 +66,10 @@ const removeFromWishList = asyncErrorHandler(async (req, res, next) => {
 // Clear wishList
 // ============================================
 const clearWishList = asyncErrorHandler(async (req, res, next) => {
-  const { userId } = req.user;
+  const { id } = req.user;
 
   const wishList = await WishList.findOneAndUpdate(
-    { user: userId },
+    { user: id },
     { products: [] },
     { new: true }
   );

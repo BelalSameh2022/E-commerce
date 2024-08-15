@@ -122,7 +122,7 @@ const signIn = asyncErrorHandler(async (req, res, next) => {
     return next(new AppError("Invalid credentials or not confirmed yet", 401));
 
   const token = jwt.sign(
-    { userId: user._id, name: user.name, email: user.email, role: user.role },
+    { userId: user._id, role: user.role },
     process.env.SIGNIN_VERIFY_SIGNATURE,
     { expiresIn: "1d" }
   );
