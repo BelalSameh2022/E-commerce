@@ -42,8 +42,6 @@ const addBrand = asyncErrorHandler(async (req, res, next) => {
 // ============================================
 const getAllBrands = asyncErrorHandler(async (req, res, next) => {
   const brands = await Brand.find({});
-  if (brands.length === 0)
-    return next(new AppError("There are no brands added yet", 404));
 
   res.status(200).json({ message: "success", brands });
 });

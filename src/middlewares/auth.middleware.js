@@ -10,10 +10,10 @@ export const auth = (roles = []) => {
     jwt.verify(token, process.env.SIGNIN_VERIFY_SIGNATURE, async (err, decoded) => {
       if (err) next(new AppError("Expired or invalid token", 498));
 
-      const user = await User.findById(decoded.userId);
-      if (!user) next(new AppError("User not found", 404));
+      const user = await User.findById(decoded?.userId);
+      if (!user) return next(new AppError("User not found", 404));
 
-      if (!roles.includes(decoded.role))
+      if (!roles.includes(decoded?.role))
         next(new AppError("You don't have enough privileges", 403));
       
       req.user = user;

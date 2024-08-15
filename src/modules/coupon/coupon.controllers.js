@@ -24,8 +24,6 @@ const addCoupon = asyncErrorHandler(async (req, res, next) => {
 // ============================================
 const getAllCoupons = asyncErrorHandler(async (req, res, next) => {
   const coupons = await Coupon.find({});
-  if (coupons.length === 0)
-    return next(new AppError("There are no coupons added yet", 404));
 
   res.status(200).json({ message: "success", coupons });
 });

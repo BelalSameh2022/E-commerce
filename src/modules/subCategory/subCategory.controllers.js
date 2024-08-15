@@ -48,7 +48,7 @@ const addSubCategory = asyncErrorHandler(async (req, res, next) => {
   res.status(201).json({ message: "success", subCategory });
 });
 
-// Get subCategories
+// Get subCategories for a specific category
 // ============================================
 const getSubCategories = asyncErrorHandler(async (req, res, next) => {
   const { categoryId } = req.params;
@@ -62,8 +62,6 @@ const getSubCategories = asyncErrorHandler(async (req, res, next) => {
     { path: "category", select: "name -_id" },
     { path: "addedBy", select: "name -_id" },
   ]);
-  if (subCategories.length === 0)
-    return next(new AppError("No subCategories added yet", 404));
 
   res.status(200).json({ message: "success", subCategories });
 });

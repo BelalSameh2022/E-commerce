@@ -136,8 +136,6 @@ const getAllOrders = asyncErrorHandler(async (req, res, next) => {
   const { id } = req.user;
 
   const orders = await Order.find({ user: id });
-  if (!orders.length)
-    return next(new AppError("There are no orders created yet", 404));
 
   res.status(200).json({ message: "success", orders });
 });

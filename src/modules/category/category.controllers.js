@@ -33,7 +33,7 @@ const addCategory = asyncErrorHandler(async (req, res, next) => {
   req.document = {
     model: Category,
     id: category._id,
-  }
+  };
 
   res.status(201).json({ message: "success", category });
 });
@@ -41,9 +41,10 @@ const addCategory = asyncErrorHandler(async (req, res, next) => {
 // Get categories
 // ============================================
 const getCategories = asyncErrorHandler(async (req, res, next) => {
-  const categories = await Category.find({}).populate("subCategories", "name -_id -category");
-  if (categories.length === 0)
-    return next(new AppError("No categories added yet", 404));
+  const categories = await Category.find({}).populate(
+    "subCategories",
+    "name -_id -category"
+  );
 
   res.status(200).json({ message: "success", categories });
 });
@@ -69,8 +70,7 @@ const updateCategory = asyncErrorHandler(async (req, res, next) => {
   const { categoryId } = req.params;
   const { name } = req.body;
 
-  if (!name && !req.file)
-    return next(new AppError("Nothing to update", 400));
+  if (!name && !req.file) return next(new AppError("Nothing to update", 400));
 
   const category = await Category.findOne({
     _id: categoryId,

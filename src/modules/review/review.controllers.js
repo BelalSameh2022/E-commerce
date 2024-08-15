@@ -52,8 +52,6 @@ const addReview = asyncErrorHandler(async (req, res, next) => {
 // ============================================
 const getAllReviews = asyncErrorHandler(async (req, res, next) => {
   const reviews = await Review.find({});
-  if (!reviews.length)
-    return next(new AppError("There are no reviews added yet", 404));
 
   res.status(200).json({ message: "success", reviews });
 });
