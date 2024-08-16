@@ -151,7 +151,7 @@ const updateProduct = asyncErrorHandler(async (req, res, next) => {
   if ((isPercentage && !discount) || (!isPercentage && discount)) {
     return next(
       new AppError(
-        "You have to provide isPercentage or not to update discount",
+        "You have to ensure both discount and isPercentage values to update",
         400
       )
     );

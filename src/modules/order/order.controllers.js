@@ -80,10 +80,7 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
   if (!order) return next(new AppError("Order creation failed", 400));
 
   if (req.coupon) {
-    await Coupon.updateOne(
-      { _id: req.coupon._id },
-      { $push: { usedBy: id } }
-    );
+    await Coupon.updateOne({ _id: req.coupon._id }, { $push: { usedBy: id } });
   }
 
   for (const item of items) {
@@ -133,21 +130,23 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
       cancel_url: `${req.protocol}://${req.headers.host}/orders/cancel/${order._id}`,
       line_items: order.items.map((item) => {
         return {
-          price_data:{
+          price_data: {
             currency: "egp",
             product_data: {
-                name: item.name
+              name: item.name,
             },
-            unit_amount: item.finalPrice * 100
-        },
-        quantity: item.quantity
-        }
+            unit_amount: item.finalPrice * 100,
+          },
+          quantity: item.quantity,
+        };
       }),
       // discounts: req.coupon ? [{ coupon: req.coupon._id }] : [],
-    })
+    });
+
+    return res.status(201).json({ message: "success", url: session.url, order });
   }
 
-  res.status(201).json({ message: "success", url: session.url, order });
+  res.status(201).json({ message: "success", order });
 });
 
 // Get all orders
@@ -201,10 +200,7 @@ const cancelOrder = asyncErrorHandler(async (req, res, next) => {
   );
 
   if (order.couponId) {
-    await Coupon.updateOne(
-      { _id: order.couponId },
-      { $pull: { usedBy: id } }
-    );
+    await Coupon.updateOne({ _id: order.couponId }, { $pull: { usedBy: id } });
   }
 
   for (const item of order.items) {
