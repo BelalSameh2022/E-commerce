@@ -11,7 +11,7 @@ const addProductSchema = {
       brand: generalFiled.id.required(),
       price: joi.number().positive().required(),
       discount: joi.number().integer().positive(),
-      isPercentage: joi.boolean().required(),
+      isPercentage: joi.boolean(),
       stock: joi.number().integer().positive().required(),
     })
     .required(),

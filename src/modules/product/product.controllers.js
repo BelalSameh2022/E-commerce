@@ -21,7 +21,7 @@ const addProduct = asyncErrorHandler(async (req, res, next) => {
     brand,
     price,
     discount = 0,
-    isPercentage,
+    isPercentage = true,
     stock,
   } = req.body;
 
