@@ -1,3 +1,4 @@
+import Stripe from "stripe";
 import Product from "../../../database/models/product.model.js";
 import Cart from "../../../database/models/cart.model.js";
 import Coupon from "../../../database/models/coupon.model.js";
@@ -121,7 +122,19 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
   // );
 
   if (paymentMethod === "card") {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+    if (req.coupon) {
+      const coupon = await stripe.coupon.create({
+        percent_off: req.coupon.amount,
+        duration: "once",
+      });
+
+      req.couponId = coupon.id;
+    }
+
     const session = await createPayment({
+      stripe,
       payment_method_types: ["card"],
       mode: "payment",
       customer_email: req.user.email,
@@ -140,10 +153,15 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
           quantity: item.quantity,
         };
       }),
-      // discounts: req.coupon ? [{ coupon: req.coupon._id }] : [],
+      discounts: req.coupon ? [{ coupon: req.couponId }] : [],
     });
 
-    return res.status(201).json({ message: "success", url: session.url, order });
+    order.paymentMethod = "placed";
+    await order.save();
+
+    return res
+      .status(201)
+      .json({ message: "success", url: session.url, order });
   }
 
   res.status(201).json({ message: "success", order });
