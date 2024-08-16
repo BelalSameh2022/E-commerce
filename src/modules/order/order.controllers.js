@@ -125,7 +125,7 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
     if (req.coupon) {
-      const coupon = await stripe.coupon.create({
+      const coupon = await stripe.coupons.create({
         percent_off: req.coupon.amount,
         duration: "once",
       });
