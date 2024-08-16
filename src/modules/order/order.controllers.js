@@ -156,7 +156,7 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
       discounts: req.coupon ? [{ coupon: req.couponId }] : [],
     });
 
-    order.paymentMethod = "placed";
+    order.status = "placed";
     await order.save();
 
     return res
