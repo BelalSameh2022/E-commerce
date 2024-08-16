@@ -16,7 +16,9 @@ export const auth = (roles = []) => {
       if (!roles.includes(decoded?.role))
         next(new AppError("You don't have enough privileges", 403));
       
+      delete user.password;
       req.user = user;
+      
       next();
     });
   };

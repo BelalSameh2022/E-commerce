@@ -6,6 +6,7 @@ import { AppError, asyncErrorHandler } from "../../utils/error.js";
 import { createInvoice } from "../../services/createInvoice.js";
 import { capitalize } from "../../utils/capitalize.js";
 import { sendEmail } from "../../services/email.js";
+import { createPayment } from "../../services/payment.js";
 
 // Create order
 // ============================================
@@ -98,36 +99,60 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
     await Cart.updateOne({ user: id }, { $set: { products: [] } });
   }
 
-  const invoice = {
-    shipping: {
-      name: capitalize(req.user.name),
-      address: "Abbas Street",
-      city: "Nasr City",
-      state: "Cairo",
-      country: "Egypt",
-      postal_code: 4450113,
-    },
-    items: order.items,
-    total: order.total,
-    finalTotal: order.finalTotal,
-    couponCode: req.coupon?.code || "___",
-    couponAmount:
-      (req.coupon?.isPercentage
-        ? req.coupon?.amount + "%"
-        : "E£" + (req.coupon?.amount)?.toFixed(2)) || "E£0.00",
-    invoice_nr: order._id,
-    date: order.createdAt,
-  };
+  // const invoice = {
+  //   shipping: {
+  //     name: capitalize(req.user.name),
+  //     address: "Abbas Street",
+  //     city: "Nasr City",
+  //     state: "Cairo",
+  //     country: "Egypt",
+  //     postal_code: 4450113,
+  //   },
+  //   items: order.items,
+  //   total: order.total,
+  //   finalTotal: order.finalTotal,
+  //   couponCode: req.coupon?.code || "___",
+  //   couponAmount:
+  //     (req.coupon?.isPercentage
+  //       ? req.coupon?.amount + "%"
+  //       : "E£" + (req.coupon?.amount)?.toFixed(2)) || "E£0.00",
+  //   invoice_nr: order._id,
+  //   date: order.createdAt,
+  // };
 
-  await createInvoice(invoice, "invoice.pdf");
-  await sendEmail(
-    req.user.email,
-    "Order Placed",
-    `Your order has been placed successfully.`,
-    [{ path: "invoice.pdf", contentType: "application/pdf" }]
-  );
+  // await createInvoice(invoice, "invoice.pdf");
+  // await sendEmail(
+  //   req.user.email,
+  //   "Order Placed",
+  //   `Your order has been placed successfully.`,
+  //   [{ path: "invoice.pdf", contentType: "application/pdf" }]
+  // );
 
-  res.status(201).json({ message: "success", order });
+  if (paymentMethod === "card") {
+    const session = await createPayment({
+      payment_method_types: ["card"],
+      mode: "payment",
+      customer_email: req.user.email,
+      metadata: { order: order._id.toString() },
+      success_url: `${req.protocol}://${req.headers.host}/orders/success/${order._id}`,
+      cancel_url: `${req.protocol}://${req.headers.host}/orders/cancel/${order._id}`,
+      line_items: order.items.map((item) => {
+        return {
+          price_data:{
+            currency: "egp",
+            product_data: {
+                name: item.name
+            },
+            unit_amount: item.finalPrice * 100
+        },
+        quantity: item.quantity
+        }
+      }),
+      // discounts: req.coupon ? [{ coupon: req.coupon._id }] : [],
+    })
+  }
+
+  res.status(201).json({ message: "success", url: session.url, order });
 });
 
 // Get all orders

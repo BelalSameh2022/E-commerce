@@ -3,10 +3,12 @@ import * as routers from "./modules/index.routes.js";
 import dbConnection from "../database/connection.js";
 import { globalErrorHandler, invalidUrlHandler } from "./utils/error.js";
 import { cloudinaryRollback, databaseRollback } from "./utils/rollback.js";
+import { deleteUnwantedHeaders } from "./middlewares/deleteUnwantedHeaders.middleware.js";
 
 const initApp = (app, express) => {
   app.use(cors())
   app.use(express.json());
+  app.use(deleteUnwantedHeaders)
 
   app.get("/", (req, res) => {
     res.status(200).json({ message: "Welcome to E-commerce App" });
