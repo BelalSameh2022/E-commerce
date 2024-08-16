@@ -64,9 +64,7 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
     items.push(item);
   }
 
-  const finalTotal = req.coupon?.isPercentage
-    ? total - total * ((req.coupon?.amount || 0) / 100)
-    : total - (req.coupon?.amount || 0);
+  const finalTotal = total - total * ((req.coupon?.amount || 0) / 100);
 
   const order = await Order.create({
     user: id,
@@ -112,10 +110,7 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
   //   total: order.total,
   //   finalTotal: order.finalTotal,
   //   couponCode: req.coupon?.code || "___",
-  //   couponAmount:
-  //     (req.coupon?.isPercentage
-  //       ? req.coupon?.amount + "%"
-  //       : "E£" + (req.coupon?.amount)?.toFixed(2)) || "E£0.00",
+  //   couponAmount:req.coupon?.amount + "%" || "___",
   //   invoice_nr: order._id,
   //   date: order.createdAt,
   // };

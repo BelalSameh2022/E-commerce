@@ -5,12 +5,11 @@ import Coupon from "../../../database/models/coupon.model.js";
 // ============================================
 const addCoupon = asyncErrorHandler(async (req, res, next) => {
   const { id } = req.user;
-  const { code, amount, isPercentage, from, to } = req.body;
+  const { code, amount, from, to } = req.body;
 
   const coupon = await Coupon.create({
     code,
     amount,
-    isPercentage,
     from,
     to,
     addedBy: id,

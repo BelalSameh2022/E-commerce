@@ -14,10 +14,8 @@ const couponSchema = new Schema(
     amount: {
       type: Number,
       required: true,
-    },
-    isPercentage: {
-      type: Boolean,
-      default: true,
+      min: 1,
+      max: 100,
     },
     addedBy: {
       type: Types.ObjectId,
