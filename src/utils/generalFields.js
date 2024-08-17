@@ -40,5 +40,6 @@ export const generalFiled = {
     "accept-encoding": joi.string(),
     connection: joi.string(),
     token: joi.string().required(),
+    "stripe-signature": joi.string(),
   }),
 };

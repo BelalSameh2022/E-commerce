@@ -10,6 +10,7 @@ export const deleteUnwantedHeaders = (req, res, next) => {
     "accept-encoding",
     "connection",
     "token",
+    "stripe-signature"
   ];
 
   Object.keys(req.headers).forEach((header) => {
