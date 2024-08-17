@@ -4,6 +4,7 @@ import { customAlphabet } from "nanoid";
 import { AppError, asyncErrorHandler } from "../../utils/error.js";
 import { sendEmail } from "../../services/email.js";
 import { confirmHtml, resendHtml } from "../../services/html.js";
+import roles from "../../utils/role.js";
 import User from "../../../database/models/user.model.js";
 
 // Sign up
@@ -16,7 +17,7 @@ const signUp = asyncErrorHandler(async (req, res, next) => {
     age,
     phoneNumbers,
     addresses,
-    role = "User",
+    role = roles.user,
   } = req.body;
 
   const token = jwt.sign(

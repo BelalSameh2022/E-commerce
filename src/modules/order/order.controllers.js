@@ -156,15 +156,39 @@ const createOrder = asyncErrorHandler(async (req, res, next) => {
       discounts: req.coupon ? [{ coupon: req.couponId }] : [],
     });
 
-    order.status = "placed";
-    await order.save();
-
     return res
       .status(201)
       .json({ message: "success", url: session.url, order });
   }
 
   res.status(201).json({ message: "success", order });
+});
+
+// Webhook
+// ============================================
+const webhook = asyncErrorHandler(async (req, res, next) => {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  const sig = req.headers["stripe-signature"];
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    return next(new AppError(`Webhook Error: ${err.message}`, 400));
+  }
+
+  // Handle the event
+  const { orderId } = event.data.object.metadata;
+  if (event.type !== "checkout.session.completed") {
+    await Order.updateOne({ _id: orderId }, { status: "rejected" });
+    return next(new AppError(`Unhandled event type ${event.type}`, 400));
+  }
+  await Order.updateOne({ _id: orderId }, { status: "placed" });
+  res.status(200).json({ message: "success" });
 });
 
 // Get all orders

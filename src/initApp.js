@@ -6,9 +6,12 @@ import { cloudinaryRollback, databaseRollback } from "./utils/rollback.js";
 import { deleteUnwantedHeaders } from "./middlewares/deleteUnwantedHeaders.middleware.js";
 
 const initApp = (app, express) => {
-  app.use(cors())
-  app.use(express.json());
-  app.use(deleteUnwantedHeaders)
+  app.use(cors());
+  app.use((req, res, next) => {
+    if (req.originalUrl === "/orders/webhook") next();
+    else express.json()(req, res, next);
+  });
+  app.use(deleteUnwantedHeaders);
 
   app.get("/", (req, res) => {
     res.status(200).json({ message: "Welcome to E-commerce App" });

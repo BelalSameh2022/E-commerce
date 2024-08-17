@@ -32,4 +32,10 @@ orderRouter.get("/cancel/:orderId", (req, res) => {
   res.status(200).json({ message: "Your order has been cancelled" });
 });
 
+orderRouter.post(
+  "/webhook",
+  express.raw({ type: "application/json" }),
+  OC.webhook
+);
+
 export default orderRouter;
