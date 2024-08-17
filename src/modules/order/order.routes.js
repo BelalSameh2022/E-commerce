@@ -1,11 +1,11 @@
-import { Router } from "express";
+import express from "express";
 import * as OC from "./order.controllers.js";
 import * as OV from "./order.validations.js";
 import role from "../../utils/role.js";
 import { auth } from "../../middlewares/auth.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 
-const orderRouter = Router();
+const orderRouter = express.Router();
 
 orderRouter
   .route("/")
